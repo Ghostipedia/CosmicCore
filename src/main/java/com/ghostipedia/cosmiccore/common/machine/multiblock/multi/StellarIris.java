@@ -22,7 +22,7 @@ import static com.ghostipedia.cosmiccore.api.registries.CosmicRegistration.REGIS
 import static com.ghostipedia.cosmiccore.common.data.CosmicBlocks.*;
 import static com.gregtechceu.gtceu.api.pattern.Predicates.*;
 import static com.gregtechceu.gtceu.api.pattern.Predicates.blocks;
-import static com.gregtechceu.gtceu.common.data.GCyMBlocks.*;
+import static com.gregtechceu.gtceu.common.data.GCYMBlocks.*;
 
 public class StellarIris {
     public final static MultiblockMachineDefinition STELLAR_IRIS = REGISTRATE.multiblock("stellar_iris", IrisMultiblockMachine::new)

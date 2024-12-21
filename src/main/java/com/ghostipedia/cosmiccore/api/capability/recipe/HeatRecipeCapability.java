@@ -29,7 +29,7 @@ public class HeatRecipeCapability extends RecipeCapability<Long> {
 
     @Override
     public Long copyWithModifier(Long content, ContentModifier modifier) {
-        return modifier.apply(content).longValue();
+        return modifier.apply(content);
     }
     @Override
     public List<AbstractMapIngredient> convertToMapIngredient(Object ingredient) {

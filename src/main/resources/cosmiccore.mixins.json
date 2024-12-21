@@ -7,10 +7,14 @@
     "AdAstraOverlayScreenMixin",
     "AdAstraSpaceSuitItemMixin",
     "DivingHelmetItemMixin",
+    "MAE2GTIntegrationMixin",
     "PlayerBreathingMixin",
+    "accessor.LivingEntityAccessor",
+    "accessor.LootTableAccessor",
     "client.CosmicCoreRemainingAirOverlayMixin"
   ],
   "client": [
+    "client.MinecraftMixin"
   ],
   "injectors": {
     "defaultRequire": 1

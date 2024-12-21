@@ -1,14 +1,19 @@
 package com.ghostipedia.cosmiccore.common.data;
 
 import com.ghostipedia.cosmiccore.CosmicCore;
+import com.ghostipedia.cosmiccore.api.machine.multiblock.IPBFMachine;
 import com.ghostipedia.cosmiccore.api.machine.part.CosmicPartAbility;
+import com.ghostipedia.cosmiccore.api.machine.part.SteamFluidHatchPartMachine;
 import com.ghostipedia.cosmiccore.api.registries.CosmicRegistration;
+import com.ghostipedia.cosmiccore.client.renderer.machine.SidedWorkableHullRenderer;
+import com.ghostipedia.cosmiccore.common.block.WorkableSteamHullType;
 import com.ghostipedia.cosmiccore.common.data.materials.CosmicMaterials;
 import com.ghostipedia.cosmiccore.common.data.recipe.CosmicRecipeModifiers;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.electric.MagneticFieldMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.CosmicParallelHatchPartMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.SoulHatchPartMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.ThermiaHatchPartMachine;
+import com.ghostipedia.cosmiccore.common.machine.multiblock.steam.WeakSteamParallelMultiBlockMachine;
 import com.ghostipedia.cosmiccore.gtbridge.CosmicRecipeTypes;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
@@ -26,14 +31,20 @@ import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
+import com.gregtechceu.gtceu.api.machine.steam.SimpleSteamMachine;
 import com.gregtechceu.gtceu.api.pattern.FactoryBlockPattern;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.registry.registrate.MachineBuilder;
+import com.gregtechceu.gtceu.client.renderer.machine.LargeBoilerRenderer;
+import com.gregtechceu.gtceu.client.renderer.machine.WorkableSteamMachineRenderer;
+import com.gregtechceu.gtceu.common.block.BoilerFireboxType;
 import com.gregtechceu.gtceu.common.data.*;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.FusionReactorMachine;
+import com.gregtechceu.gtceu.common.registry.GTRegistration;
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.network.chat.Component;
 import com.gregtechceu.gtceu.utils.GTHashMaps;
 import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
@@ -44,7 +55,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.WaterFluid;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -57,9 +67,11 @@ import static com.gregtechceu.gtceu.api.GTValues.*;
 import static com.gregtechceu.gtceu.api.GTValues.UV;
 import static com.gregtechceu.gtceu.api.pattern.Predicates.*;
 import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
-import static com.gregtechceu.gtceu.common.data.GCyMBlocks.*;
+import static com.gregtechceu.gtceu.common.data.GCYMBlocks.*;
 import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
 import static com.gregtechceu.gtceu.common.data.GTMachines.*;
+import static com.gregtechceu.gtceu.common.data.machines.GTMachineUtils.*;
+import static com.gregtechceu.gtceu.common.data.machines.GTMultiMachines.FUSION_REACTOR;
 
 public class CosmicMachines {
     static {
@@ -67,24 +79,6 @@ public class CosmicMachines {
     }
 
     public static final int[] HIGH_TIERS = GTValues.tiersBetween(GTValues.IV, GTCEuAPI.isHighTier() ? GTValues.OpV : GTValues.UHV);
-
-    public static GTRecipe copyOutputs(GTRecipe recipe, ContentModifier modifier) {
-
-        return new GTRecipe(recipe.recipeType, recipe.getId(),
-                recipe.inputs,
-                recipe.copyContents(recipe.outputs, modifier),
-                recipe.tickInputs,
-                recipe.copyContents(recipe.tickOutputs, modifier),
-                new HashMap<>(recipe.inputChanceLogics), new HashMap<>(recipe.outputChanceLogics),
-                new HashMap<>(recipe.tickInputChanceLogics), new HashMap<>(recipe.tickOutputChanceLogics),
-                new ArrayList<>(recipe.conditions),
-                new ArrayList<>(recipe.ingredientActions),
-                recipe.data,
-                recipe.duration,
-                recipe.isFuel);
-
-
-    }
 
     public final static MachineDefinition[] SOUL_IMPORT_HATCH = registerSoulTieredHatch(
             "soul_input_hatch", "Soul Input Hatch", "soul_hatch.import",
@@ -102,6 +96,25 @@ public class CosmicMachines {
     public static final MachineDefinition[] NAQUAHINE_MINI_REACTOR = registerSimpleGenerator("naquahine_mini_reactor",
             CosmicRecipeTypes.MINI_NAQUAHINE_REACTOR, genericGeneratorTankSizeFunction, 0.0f, GTValues.IV, GTValues.LuV,
             GTValues.ZPM, GTValues.UV, GTValues.UHV);
+    public static final Pair<MachineDefinition, MachineDefinition> STEAM_BENDER = registerSteamMachines(
+            "steam_bender", SimpleSteamMachine::new, (pressure, builder) -> builder
+                    .rotationState(RotationState.NON_Y_AXIS)
+                    .recipeType(GTRecipeTypes.BENDER_RECIPES)
+                    .recipeModifier(SimpleSteamMachine::recipeModifier)
+                    .addOutputLimit(ItemRecipeCapability.CAP, 1)
+                    .renderer(() -> new WorkableSteamMachineRenderer(pressure, GTCEu.id("block/machines/bender")))
+                    .register());
+    public static final Pair<MachineDefinition, MachineDefinition> STEAM_WIREMILL = registerSteamMachines(
+            "steam_wiremill", SimpleSteamMachine::new, (pressure, builder) -> builder
+                    .rotationState(RotationState.NON_Y_AXIS)
+                    .recipeType(GTRecipeTypes.WIREMILL_RECIPES)
+                    .recipeModifier(SimpleSteamMachine::recipeModifier)
+                    .addOutputLimit(ItemRecipeCapability.CAP, 1)
+                    .renderer(() -> new WorkableSteamMachineRenderer(pressure, GTCEu.id("block/machines/wiremill")))
+                    .register());
+
+
+
     public static final MachineDefinition[] COSMIC_PARALLEL_HATCH = registerTieredMachines("cosmic_parallel_hatch",
             CosmicParallelHatchPartMachine::new,
             (tier, builder) -> builder
@@ -134,30 +147,136 @@ public class CosmicMachines {
 //                    .build())
 //            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"), GTCEu.id("block/multiblock/coke_oven"))
 //            .register();
-
+public static final MultiblockMachineDefinition STEAM_CASTER = GTRegistration.REGISTRATE
+        .multiblock("steam_caster", WeakSteamParallelMultiBlockMachine::new)
+        .rotationState(RotationState.ALL)
+        .appearanceBlock(BRONZE_HULL)
+        .recipeType(GTRecipeTypes.FLUID_SOLIDFICATION_RECIPES)
+        .recipeModifier(WeakSteamParallelMultiBlockMachine::recipeModifier, true)
+        .addOutputLimit(ItemRecipeCapability.CAP, 1)
+        .pattern(definition -> FactoryBlockPattern.start()
+                .aisle("AAAA", "ABBA", "AAAA")
+                .aisle("AAAA", "BCCB", "AAAA")
+                .aisle("AAAA", "ADBA", "AAAA")
+                .where('D', Predicates.controller(blocks(definition.getBlock())))
+                .where('#', Predicates.air())
+                .where(' ', Predicates.any())
+                .where('A', blocks(CASING_BRONZE_BRICKS.get()))
+                .where('B', blocks(CASING_COKE_BRICKS.get())
+                        .or(Predicates.abilities(PartAbility.STEAM_IMPORT_ITEMS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.STEAM_EXPORT_ITEMS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.STEAM).setExactLimit(1)))
+                .where('C', blocks(CASING_BRONZE_PIPE.get()))
+                .build())
+        .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_coke_bricks"), CosmicCore.id("block/multiblock/solidifier"))
+        .register();
+public static final MultiblockMachineDefinition STEAM_MIXER = GTRegistration.REGISTRATE
+        .multiblock("steam_mixing_vessel", WeakSteamParallelMultiBlockMachine::new)
+        .rotationState(RotationState.ALL)
+        .appearanceBlock(BRONZE_BRICKS_HULL)
+        .recipeType(GTRecipeTypes.MIXER_RECIPES)
+        .recipeModifier(WeakSteamParallelMultiBlockMachine::recipeModifier, true)
+        .addOutputLimit(ItemRecipeCapability.CAP, 1)
+        .pattern(definition -> FactoryBlockPattern.start()
+                .aisle("AAA", "BCB", "BCB", " B ")
+                .aisle("AAA", "CEC", "CEC", "BBB")
+                .aisle("ADA", "BCB", "BCB", " B ")
+                .where('D', Predicates.controller(blocks(definition.getBlock())))
+                .where('#', Predicates.air())
+                .where(' ', Predicates.any())
+                .where('A', blocks(BRONZE_BRICKS_HULL.get())
+                        .or(Predicates.abilities(PartAbility.STEAM_IMPORT_ITEMS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.STEAM_EXPORT_ITEMS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                        .or(Predicates.abilities(PartAbility.STEAM).setExactLimit(1)))
+                .where('B', blocks(CASING_BRONZE_BRICKS.get()))
+                .where('C', blocks(BRONZE_HULL.get()))
+                .where('E', blocks(CASING_BRONZE_GEARBOX.get()))
+                .build())
+        .renderer(() -> new SidedWorkableHullRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
+                WorkableSteamHullType.BRONZE_BRICK_HULL,
+                CosmicCore.id("block/multiblock/mixing_vessel")))
+        .register();
+    public static final MultiblockMachineDefinition INDUSTRIAL_PRIMITIVE_BLAST_FURNACE = GTRegistration.REGISTRATE
+            .multiblock("industrial_primitive_blast_furnace", IPBFMachine::new)
+            .rotationState(RotationState.ALL)
+            .recipeType(CosmicRecipeTypes.INDUSTRIAL_PRIMITIVE_BLAST_FURNACE_RECIPES)
+            .recipeModifier(IPBFMachine::recipeModifier, true)
+            .appearanceBlock(CASING_PRIMITIVE_BRICKS)
+            .pattern(definition -> FactoryBlockPattern.start()
+                    .aisle("QQQ", "XXX", "XXX", "XXX", "XXX")
+                    .aisle("QQQ", "X#X", "X#X", "X#X", "X#X")
+                    .aisle("QQQ", "XYX", "XXX", "XXX", "XXX")
+                    .where('X', blocks(CASING_PRIMITIVE_BRICKS.get()))
+                    .where('#', Predicates.air())
+                    .where('Y', Predicates.controller(blocks(definition.getBlock())))
+                    .where('Q', blocks(FIREBOX_STEEL.get()).setMinGlobalLimited(6)
+                            .or(Predicates.abilities(PartAbility.STEAM_IMPORT_ITEMS).setPreviewCount(1).setExactLimit(1))
+                            .or(Predicates.abilities(PartAbility.STEAM_EXPORT_ITEMS).setPreviewCount(1).setExactLimit(1))
+                            .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1).setExactLimit(1)))
+                    .build())
+            .renderer(() -> new LargeBoilerRenderer(GTCEu.id("block/casings/solid/machine_primitive_bricks"),
+                    BoilerFireboxType.STEEL_FIREBOX,
+                    GTCEu.id("block/multiblock/primitive_blast_furnace")))
+            .tooltips(Component.translatable("cosmiccore.multiblock.ipbf.tooltip.0"),
+                    Component.translatable("cosmiccore.multiblock.ipbf.tooltip.1"),
+                    Component.translatable("cosmiccore.multiblock.ipbf.tooltip.2"),
+                    Component.translatable("cosmiccore.multiblock.ipbf.tooltip.3")
+            )
+            .register();
+    public static final MultiblockMachineDefinition HIGH_PRESSURE_ASSEMBLER = GTRegistration.REGISTRATE
+            .multiblock("high_pressure_assembler", WeakSteamParallelMultiBlockMachine::new)
+            .rotationState(RotationState.ALL)
+            .recipeType(GTRecipeTypes.ASSEMBLER_RECIPES)
+            .recipeModifier(WeakSteamParallelMultiBlockMachine::recipeModifier, true)
+            .appearanceBlock(STEEL_PLATED_BRONZE)
+            .pattern(definition -> FactoryBlockPattern.start()
+                    .aisle("AAAAA", "BBBBB", "BBBBB")
+                    .aisle("AAAAA", "BDDDB", "BBBBB")
+                    .aisle("AAAAA", "BYBBB", "BBBBB")
+                    .where('B', blocks(STEEL_PLATED_BRONZE.get())
+                            .or(Predicates.abilities(PartAbility.STEAM_IMPORT_ITEMS).setPreviewCount(1).setExactLimit(2))
+                            .or(Predicates.abilities(PartAbility.STEAM_EXPORT_ITEMS).setPreviewCount(1).setExactLimit(1))
+                            .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1).setExactLimit(1)))
+                    .where('#', Predicates.air())
+                    .where('Y', Predicates.controller(blocks(definition.getBlock())))
+                    .where('A', blocks(FIREBOX_STEEL.get()).setMinGlobalLimited(11)
+                            .or(Predicates.abilities(PartAbility.STEAM).setExactLimit(1)))
+                    .where('D', blocks(CASING_STEEL_GEARBOX.get()))
+                    .build())
+            .renderer(() -> new LargeBoilerRenderer(CosmicCore.id("block/casings/solid/steel_plated_bronze_casing"),
+                    BoilerFireboxType.STEEL_FIREBOX,
+                    GTCEu.id("block/multiblock/implosion_compressor")))
+            .tooltips(Component.translatable("cosmiccore.multiblock.hpsassem.tooltip.0"),
+                    Component.translatable("cosmiccore.multiblock.hpsassem.tooltip.1"),
+                    Component.translatable("cosmiccore.multiblock.hpsassem.tooltip.2")
+            )
+            .register();
     //Terrifying Recipe Modifiers half of this is moonruns to me :lets:
     public final static MultiblockMachineDefinition DRYGMY_GROVE = REGISTRATE.multiblock("drygmy_grove", WorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.NON_Y_AXIS)
             .recipeType(CosmicRecipeTypes.GROVE_RECIPES)
-            .recipeModifiers(true,
-                    (machine, recipe, OCParams, OCResult) -> {
-                        if (machine instanceof IRecipeCapabilityHolder holder) {
-                            // Find all the items in the combined Item Input inventories and create oversized ItemStacks
-                            Object2IntMap<ItemStack> ingredientStacks = Objects.requireNonNullElseGet(holder.getCapabilitiesProxy().get(IO.IN, ItemRecipeCapability.CAP), Collections::<IRecipeHandler<?>>emptyList)
-                                    .stream()
-                                    .map(container -> container.getContents().stream().filter(ItemStack.class::isInstance).map(ItemStack.class::cast).toList())
-                                    .flatMap(container -> GTHashMaps.fromItemStackCollection(container).object2IntEntrySet().stream())
-                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Integer::sum, () -> new Object2IntOpenCustomHashMap<>(ItemStackHashStrategy.comparingAllButCount())));
-                            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(new ResourceLocation("ars_nouveau:drygmy_charm")));
-                            //Never let the multiplier be 0 (THIS IS NOT ACTUALLY PARALLEL, It's just being used to to some goober grade math)
-                            if (ingredientStacks.getInt(stack) >= 1) {
-                                var maxParallel = ingredientStacks.getInt(stack) / 2;
-                                recipe = copyOutputs(recipe, ContentModifier.multiplier(maxParallel));
-                            }
-                        }
-                        return recipe;
-                    },
-                    GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
+//            .recipeModifiers(true,
+//                    (machine, recipe, OCParams, OCResult) -> {
+//                        if (machine instanceof IRecipeCapabilityHolder holder) {
+//                            // Find all the items in the combined Item Input inventories and create oversized ItemStacks
+//                            Object2IntMap<ItemStack> ingredientStacks = Objects.requireNonNullElseGet(holder.getCapabilitiesProxy().get(IO.IN, ItemRecipeCapability.CAP), Collections::<IRecipeHandler<?>>emptyList)
+//                                    .stream()
+//                                    .map(container -> container.getContents().stream().filter(ItemStack.class::isInstance).map(ItemStack.class::cast).toList())
+//                                    .flatMap(container -> GTHashMaps.fromItemStackCollection(container).object2IntEntrySet().stream())
+//                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Integer::sum, () -> new Object2IntOpenCustomHashMap<>(ItemStackHashStrategy.comparingAllButCount())));
+//                            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(new ResourceLocation("ars_nouveau:drygmy_charm")));
+//                            //Never let the multiplier be 0 (THIS IS NOT ACTUALLY PARALLEL, It's just being used to to some goober grade math)
+//                            if (ingredientStacks.getInt(stack) >= 1) {
+//                                var maxParallel = ingredientStacks.getInt(stack) / 2;
+//                                recipe = copyOutputs(recipe, ContentModifier.multiplier(maxParallel));
+//                            }
+//                        }
+//                        return recipe;
+//                    },
+//                    GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
             .appearanceBlock(GTBlocks.CASING_STAINLESS_CLEAN)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("##QQQ##", "##QQQ##", "#######", "#######", "#######", "##QQQ##", "##QQQ##")
@@ -191,7 +310,7 @@ public class CosmicMachines {
     public final static MultiblockMachineDefinition NAQUAHINE_PRESSURE_REACTOR = REGISTRATE.multiblock("naquahine_pressure_reactor", MagneticFieldMachine::new)
             .rotationState(RotationState.NON_Y_AXIS)
             .recipeType(CosmicRecipeTypes.NAQUAHINE_REACTOR)
-            .recipeModifier(CosmicRecipeModifiers::reactorRecipe)
+            .recipeModifier(CosmicRecipeModifiers::vomahineReactorOC)
             .appearanceBlock(CosmicBlocks.NAQUADAH_PRESSURE_RESISTANT_CASING)
             .generator(true)
             .pattern(definition -> FactoryBlockPattern.start()
@@ -252,7 +371,7 @@ public class CosmicMachines {
             .rotationState(RotationState.NON_Y_AXIS)
             .recipeType(CosmicRecipeTypes.CHROMATIC_FLOTATION_PLANT)
             .recipeModifier(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
-            .appearanceBlock(GCyMBlocks.CASING_WATERTIGHT)
+            .appearanceBlock(GCYMBlocks.CASING_WATERTIGHT)
             .generator(true)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("AAAAAAA", "AAAAAAA", "AAAAAAA", "AAAAAAA", "AAAAAAA")
@@ -339,7 +458,7 @@ public class CosmicMachines {
     public final static MultiblockMachineDefinition VOMAHINE_INDUSTRIAL_CHEMPLANT = REGISTRATE.multiblock("vomahine_industrial_chemical_plant", WorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
             .recipeTypes(CosmicRecipeTypes.VOMAHINE_INDUSTRIAL_CHEMVAT, GTRecipeTypes.CRACKING_RECIPES)
-            .recipeModifiers(CosmicRecipeModifiers::vomahineChemicalPlantParallel,GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
+            .recipeModifiers(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
             .appearanceBlock(VOMAHINE_CERTIFIED_CHEMICALLY_RESISTANT_CASING)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("##QQQ##", "##QQQ##", "###Q###", "#######", "#######","#######","#######","#######","###Q###","##QQQ##","##QQQ##")
@@ -375,7 +494,7 @@ public class CosmicMachines {
     public final static MultiblockMachineDefinition CELESTIAL_BORE = REGISTRATE.multiblock("vomahine_celestial_laser_bore", WorkableElectricMultiblockMachine::new)
             .rotationState(RotationState.ALL)
             .recipeType(CosmicRecipeTypes.CELESTIAL_BORE)
-            .recipeModifiers(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK),CosmicRecipeModifiers::vomahineChemicalPlantParallel)
+            .recipeModifiers(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
             .appearanceBlock(VOMAHINE_CERTIFIED_CHEMICALLY_RESISTANT_CASING)
             .pattern(definition -> FactoryBlockPattern.start()
                     .aisle("                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                               A                               ", "                               A                               ", "                               A                               ", "                            AAAAAAA                            ", "                               A                               ", "                               A                               ", "                               A                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ", "                                                               ")
@@ -483,7 +602,6 @@ public class CosmicMachines {
                         .abilities(abilities)
                         .rotationState(RotationState.ALL)
                         .overlayTieredHullRenderer(model)
-                        .compassNode("soul_hatch")
                         .tooltipBuilder((item, tooltip) -> {
                             if (io == IO.IN)
                                 tooltip.add(Component.translatable("tooltip.cosmiccore.soul_hatch.input", SoulHatchPartMachine.getMaxConsumption(tier)));
@@ -515,9 +633,23 @@ public class CosmicMachines {
         }
         return definitions;
     }
-
+    public static final MachineDefinition STEAM_IMPORT_HATCH = GTRegistration.REGISTRATE
+            .machine("steam_fluid_input_hatch", holder -> new SteamFluidHatchPartMachine(holder, IO.IN, 4000, 1))
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.IMPORT_FLUIDS)
+            .overlaySteamHullRenderer("fluid_hatch.import")
+            .tooltips(Component.translatable("gtceu.machine.steam_fluid_hatch_notice"))
+            .langValue("Fluid Input Hatch (Steam)")
+            .register();
+    public static final MachineDefinition STEAM_EXPORT_HATCH = GTRegistration.REGISTRATE
+            .machine("steam_fluid_output_hatch", holder -> new SteamFluidHatchPartMachine(holder, IO.OUT, 4000, 1))
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.EXPORT_FLUIDS)
+            .overlaySteamHullRenderer("fluid_hatch.export")
+            .langValue("Fluid Output Hatch (Steam)")
+            .register();
     public static void init() {
-        for (MultiblockMachineDefinition definition : GTMachines.FUSION_REACTOR) {
+        for (MultiblockMachineDefinition definition : FUSION_REACTOR) {
             if (definition == null) continue;
             definition.setPatternFactory(() -> {
                 var casing = blocks(FusionReactorMachine.getCasingState(definition.getTier()));
