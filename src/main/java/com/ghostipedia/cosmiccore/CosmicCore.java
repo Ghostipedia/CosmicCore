@@ -7,6 +7,7 @@ import com.ghostipedia.cosmiccore.client.CosmicCoreClient;
 import com.ghostipedia.cosmiccore.common.data.*;
 import com.ghostipedia.cosmiccore.common.data.materials.CosmicMaterialSet;
 import com.ghostipedia.cosmiccore.common.data.materials.CosmicMaterials;
+import com.ghostipedia.cosmiccore.common.data.temperature.attribute.FireResApplicator;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.StellarIris;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.StellarStarBallast;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.modular.ModularizedMultis;
@@ -47,7 +48,7 @@ public class CosmicCore {
        // bus.addGenericListener(MachineDefinition.class, this::registerMachines);
         bus.addGenericListener(MachineDefinition.class, this::registerMachines);
         bus.addGenericListener(SoundEntry.class, this::registerSounds);
-
+//        bus.addListener(FireResApplicator::onPotionEffect);
         CosmicLootModifiers.register(bus);
 
         if (Platform.isClient()) {

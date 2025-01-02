@@ -155,7 +155,7 @@ dependencies {
     modImplementation("dev.latvian.mods:kubejs-forge:${project.kubejs_version}")
     modImplementation("appeng:appliedenergistics2-forge:15.2.13")
     modImplementation("curse.maven:modern-ae2-additions-1028068:5826205") { transitive = false }
-//    modImplementation("curse.maven:legendary-survival-overhaul-840254:5921074") { transitive = false }
+    modImplementation("curse.maven:legendary-survival-overhaul-840254:5921074") { transitive = false }
     // Ad Astra
     forgeRuntimeLibrary("com.teamresourceful:yabn:1.0.3") // Cause architectury is kinda dumb with some java libs
     forgeRuntimeLibrary("com.teamresourceful:bytecodecs:1.0.2") // Cause architectury is kinda dumb with some java libs
