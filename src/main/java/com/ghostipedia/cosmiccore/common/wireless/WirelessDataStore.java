@@ -1,37 +1,54 @@
 package com.ghostipedia.cosmiccore.common.wireless;
 
 import com.ghostipedia.cosmiccore.api.wireless.IWirelessStore;
+import com.gregtechceu.gtceu.api.capability.IDataAccessHatch;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.ghostipedia.cosmiccore.common.wireless.GlobalWirelessVariableStorage.GlobalWirelessDataSticks;
 
-public class WirelessDataStore implements IWirelessStore<List<ItemStack>> {
+public class WirelessDataStore {
 
-    private final ArrayList<ItemStack> dataSticks = new ArrayList<ItemStack>();
+    private final Set<IDataAccessHatch> transmitters = new HashSet<>();
 
-    @Override
     public void clearData() {
-        dataSticks.clear();
+        transmitters.clear();
     }
 
-    @Override
-    public void uploadData(List<ItemStack> data) {
-        dataSticks.addAll(data);
+    public void addTransmitters(List<IDataAccessHatch> data) {
+        transmitters.addAll(data);
     }
 
-    @Override
-    public List<ItemStack> downloadData() {
-        return dataSticks;
+    public void removeTransmitters(List<IDataAccessHatch> data) {
+        data.forEach(transmitters::remove);
+    }
+
+    public List<IDataAccessHatch> getTransmitters() {
+        return transmitters.stream().toList();
+    }
+
+    public boolean isRecipeAvailable(@NotNull GTRecipe recipe, @NotNull Collection<IDataAccessHatch> seen) {
+        return transmitters.stream().anyMatch(t -> t.isRecipeAvailable(recipe, seen));
     }
 
     public static WirelessDataStore getWirelessDataStore(UUID uuid) {
-        //TODO: Implement Team logic here
         if (GlobalWirelessDataSticks.get(uuid) == null)
             GlobalWirelessDataSticks.put(uuid, new WirelessDataStore());
         return GlobalWirelessDataSticks.get(uuid);
+    }
+
+    public static void addHatches(UUID uuid, List<IDataAccessHatch> hatches) {
+        var dataStore = getWirelessDataStore(uuid);
+        dataStore.addTransmitters(hatches);
+        GlobalWirelessDataSticks.put(uuid, dataStore);
+    }
+
+    public static void removeHatches(UUID uuid, List<IDataAccessHatch> hatches) {
+        var dataStore = getWirelessDataStore(uuid);
+        dataStore.removeTransmitters(hatches);
+        GlobalWirelessDataSticks.put(uuid, dataStore);
     }
 }
