@@ -4,6 +4,9 @@ import com.gregtechceu.gtceu.common.machine.owner.ArgonautsOwner;
 import com.gregtechceu.gtceu.common.machine.owner.FTBOwner;
 import com.gregtechceu.gtceu.common.machine.owner.IMachineOwner;
 import com.gregtechceu.gtceu.common.machine.owner.PlayerOwner;
+import net.minecraft.server.players.PlayerList;
+import wayoftime.bloodmagic.core.util.PlayerUtil;
+import wayoftime.bloodmagic.util.helper.PlayerHelper;
 
 import java.util.UUID;
 
