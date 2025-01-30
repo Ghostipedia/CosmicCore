@@ -1,6 +1,8 @@
 package com.ghostipedia.cosmiccore.common.data.materials;
 
 import com.ghostipedia.cosmiccore.CosmicCore;
+import com.ghostipedia.cosmiccore.api.material.CosmicPropertyKeys;
+import com.ghostipedia.cosmiccore.api.pipe.HeatPipeProperties;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
@@ -242,6 +244,10 @@ public class CosmicMaterials {
                 .liquid(new FluidBuilder().temperature(10))
                 .color(0xdb5e5e).secondaryColor(0x5e0f3d).iconSet(MaterialIconSet.SHINY)
                 .buildAndRegister();
+    }
+
+    public static void modifyMaterials() {
+        HastelloyC276.setProperty(CosmicPropertyKeys.HEAT, new HeatPipeProperties(1500.f, 5.7f));
 
     }
 }

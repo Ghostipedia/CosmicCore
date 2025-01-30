@@ -171,6 +171,5 @@ public class CosmicBlocks {
     }
 
     public static void init() {
-
     }
 }

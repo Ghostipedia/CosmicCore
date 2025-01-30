@@ -15,6 +15,7 @@ import com.ghostipedia.cosmiccore.gtbridge.CosmicRecipeTypes;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialEvent;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialRegistryEvent;
+import com.gregtechceu.gtceu.api.data.chemical.material.event.PostMaterialEvent;
 import com.gregtechceu.gtceu.api.data.chemical.material.registry.MaterialRegistry;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -59,13 +60,13 @@ public class CosmicCore {
     public static void init() {
         ConfigHolder.init();
         CosmicCreativeModeTabs.init();
-        CosmicBlocks.init();
-        CosmicBlockEntities.init();
-        CosmicItems.init();
         CosmicRegistration.REGISTRATE.registerRegistrate();
+        CosmicMaterialSet.init();
+        CosmicItems.init();
+        CosmicBlocks.init();
+
         CosmicCoreDatagen.init();
         CosmicPredicates.init();
-        CosmicMaterialSet.init();
     }
 
     public static ResourceLocation id(String path) {
@@ -80,6 +81,11 @@ public class CosmicCore {
     @SubscribeEvent
     public void registerMaterials(MaterialEvent event) {
         CosmicMaterials.register();
+    }
+
+    @SubscribeEvent
+    public void modifyExistingMaterials(PostMaterialEvent event) {
+        CosmicMaterials.modifyMaterials();
     }
 
     @SubscribeEvent
