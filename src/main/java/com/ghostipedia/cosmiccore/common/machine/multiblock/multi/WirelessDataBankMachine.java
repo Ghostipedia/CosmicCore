@@ -4,11 +4,13 @@ import com.ghostipedia.cosmiccore.CosmicCore;
 import com.ghostipedia.cosmiccore.common.wireless.WirelessDataStore;
 import com.ghostipedia.cosmiccore.utils.OwnershipUtils;
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.blockentity.ITickSubscription;
 import com.gregtechceu.gtceu.api.capability.IControllable;
 import com.gregtechceu.gtceu.api.capability.IDataAccessHatch;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.machine.ConditionalSubscriptionHandler;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
@@ -23,6 +25,7 @@ import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMa
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
 import com.gregtechceu.gtceu.common.machine.multiblock.electric.research.DataBankMachine;
+import com.gregtechceu.gtceu.common.machine.multiblock.part.MaintenanceHatchPartMachine;
 import com.gregtechceu.gtceu.common.machine.owner.ArgonautsOwner;
 import com.gregtechceu.gtceu.common.machine.owner.FTBOwner;
 import com.gregtechceu.gtceu.common.machine.owner.IMachineOwner;
@@ -49,22 +52,52 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
 
     private IMaintenanceMachine maintenance;
     private IEnergyContainer energyContainer;
-    private boolean transmitting = false;
 
-    @Getter
-    private int energyUsage = 0;
-
-    @Nullable
-    protected TickableSubscription tickSubs;
+    private TickableSubscription wirelessProviderSubscription;
 
     public WirelessDataBankMachine(IMachineBlockEntity holder) {
         super(holder);
         energyContainer = new EnergyContainerList(new ArrayList<>());
     }
 
+    public void updateSubscriptions() {
+        if (isSubscriptionActive()) {
+            wirelessProviderSubscription = subscribeServerTick(wirelessProviderSubscription, this::transmitWirelessData);
+        } else if (wirelessProviderSubscription != null) {
+            wirelessProviderSubscription.unsubscribe();
+            wirelessProviderSubscription = null;
+            removeHatchesFromWirelessNetwork();
+        } else {
+            removeHatchesFromWirelessNetwork();
+        }
+    }
+
+    public void unsubscribe() {
+        if (wirelessProviderSubscription != null) {
+            wirelessProviderSubscription.unsubscribe();
+            wirelessProviderSubscription = null;
+        }
+    }
+
+    protected void transmitWirelessData() {
+        if (isWorkingEnabled()) {
+            getRecipeLogic().setStatus(isSubscriptionActive() ? RecipeLogic.Status.WORKING : RecipeLogic.Status.SUSPEND);
+            energyContainer.removeEnergy(calculateEnergyUsage());
+            addHatchesToWirelessNetwork();
+        } else removeHatchesFromWirelessNetwork();
+        updateSubscriptions();
+    }
+
+    protected boolean isSubscriptionActive() {
+        if (!isFormed()) return false;
+        if (energyContainer == null || energyContainer.getEnergyStored() <= 0) return false;
+        return energyContainer.getEnergyStored() > calculateEnergyUsage();
+    }
+
     @Override
     public void onStructureFormed() {
         super.onStructureFormed();
+
         List<IEnergyContainer> energyContainers = new ArrayList<>();
         Map<Long, IO> ioMap = getMultiblockState().getMatchContext().getOrCreate("ioMap", Long2ObjectMaps::emptyMap);
 
@@ -74,89 +107,39 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
                 this.maintenance = maintenanceMachine;
             if (io == IO.NONE || io == IO.OUT) continue;
             for (var handler : part.getRecipeHandlers()) {
-                if (io != IO.BOTH && handler.getHandlerIO() != IO.BOTH && io != handler.getHandlerIO())
-                    continue;
-                if (handler.getCapability() == EURecipeCapability.CAP && handler instanceof IEnergyContainer container)
+                var handlerIO = handler.getHandlerIO();
+                if (io != IO.BOTH && handlerIO != IO.BOTH && io != handlerIO) continue;
+                if (handler.getCapability() == EURecipeCapability.CAP && handler instanceof IEnergyContainer container) {
                     energyContainers.add(container);
+                    traitSubscriptions.add(handler.addChangedListener(this::updateSubscriptions));
+                }
             }
         }
-
-        energyContainer = new EnergyContainerList(new ArrayList<>(energyContainers));
-        energyUsage = calculateEnergyUsage();
 
         if (this.maintenance == null) {
             onStructureInvalid();
             return;
         }
 
-        if (getLevel() instanceof ServerLevel serverLevel) {
-            serverLevel.getServer().tell(new TickTask(0, this::updateTickSubscription));
-        }
+        this.energyContainer = new EnergyContainerList(new ArrayList<>(energyContainers));
+
+        updateSubscriptions();
     }
 
     private int calculateEnergyUsage() {
         int receivers = getOpticalHatches().size();
-        return receivers * EUT_PER_HATCH_CHAINED;
+        var maintenanceIssues = getMaintenanceIssues();
+        return receivers * maintenanceIssues * EUT_PER_HATCH_CHAINED;
     }
 
     @Override
     public void onStructureInvalid() {
-        super.onStructureInvalid();
-        this.removeHatchesFromWirelessNetwork();
-        this.energyContainer = new EnergyContainerList(new ArrayList<>());
-        this.energyUsage = 0;
-    }
-
-    @Override
-    public void onLoad() {
-        super.onLoad();
-        if (this.isFormed() && getLevel() instanceof ServerLevel serverLevel) {
-            serverLevel.getServer().tell(new TickTask(0, this::updateTickSubscription));
-        }
-    }
-
-    @Override
-    public void onUnload() {
-        super.onUnload();
-        if (tickSubs != null) {
-            tickSubs.unsubscribe();
-            tickSubs = null;
-        }
-    }
-
-    protected void updateTickSubscription() {
-        if (isFormed) {
-            tickSubs = subscribeServerTick(tickSubs, this::tick);
-        } else if (tickSubs != null) {
-            tickSubs.unsubscribe();
-            tickSubs = null;
-        }
-    }
-
-    public void tick() {
-        int energyToConsume = this.getEnergyUsage();
-        boolean hasMaintenance = ConfigHolder.INSTANCE.machines.enableMaintenance && this.maintenance != null;
-        if (hasMaintenance) energyToConsume += maintenance.getNumMaintenanceProblems() * energyToConsume / 10;
-
-        if (this.energyContainer.getEnergyStored() >= energyToConsume) {
-            if (getRecipeLogic().isWaiting()) getRecipeLogic().setStatus(RecipeLogic.Status.IDLE);
-            if (!getRecipeLogic().isWaiting()) {
-                if (!transmitting) addHatchesToWirelessNetwork();
-                long consumed = this.energyContainer.removeEnergy(energyToConsume);
-                if (consumed == energyToConsume) {
-                    getRecipeLogic().setStatus(RecipeLogic.Status.WORKING);
-                } else {
-                    getRecipeLogic().setWaiting(Component.translatable("gtceu.recipe_logic.insufficient_in")
-                            .append(": ").append(EURecipeCapability.CAP.getName()));
-                }
-            }
-        } else {
-            getRecipeLogic()
-                    .setWaiting(Component.translatable("gtceu.recipe_logic.insufficient_in").append(": ")
-                    .append(EURecipeCapability.CAP.getName()));
+        if (isWorkingEnabled() && getRecipeLogic().getStatus() == RecipeLogic.Status.WORKING)
             removeHatchesFromWirelessNetwork();
-        }
-        updateTickSubscription();
+        super.onStructureInvalid();
+        this.energyContainer = new EnergyContainerList(new ArrayList<>());
+        getRecipeLogic().setStatus(RecipeLogic.Status.SUSPEND);
+        unsubscribe();
     }
 
     @Override
@@ -167,19 +150,8 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.data_bank.providing")
-                .addEnergyUsageExactLine(getEnergyUsage())
-                .addWorkingStatusLine()
-                .addEmptyLine();
-    }
-
-    @Override
-    public int getProgress() {
-        return 0;
-    }
-
-    @Override
-    public int getMaxProgress() {
-        return 0;
+                .addEnergyUsageExactLine(calculateEnergyUsage())
+                .addWorkingStatusLine();
     }
 
     private void addHatchesToWirelessNetwork() {
@@ -187,7 +159,6 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
         var uuid = OwnershipUtils.getOwnerUUID(owner);
         var hatches = getOpticalHatches();
         WirelessDataStore.addHatches(uuid, hatches);
-        transmitting = true;
     }
 
     private void removeHatchesFromWirelessNetwork() {
@@ -195,7 +166,6 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
         var uuid = OwnershipUtils.getOwnerUUID(owner);
         var hatches = getOpticalHatches();
         WirelessDataStore.removeHatches(uuid, hatches);
-        transmitting = false;
     }
 
     private List<IDataAccessHatch> getOpticalHatches() {
@@ -209,5 +179,12 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
         }
 
         return hatches;
+    }
+
+    private int getMaintenanceIssues() {
+        for (var part : getParts())
+            if (part instanceof IMaintenanceMachine maintenanceMachine)
+                return maintenanceMachine.getNumMaintenanceProblems();
+        return 0;
     }
 }
