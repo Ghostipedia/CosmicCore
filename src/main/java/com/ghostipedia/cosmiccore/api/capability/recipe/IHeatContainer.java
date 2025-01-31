@@ -4,23 +4,21 @@ import com.ghostipedia.cosmiccore.api.capability.IHeatInfoProvider;
 import net.minecraft.core.Direction;
 
 public interface IHeatContainer extends IHeatInfoProvider {
-    /* Basically just changeHeat(long) but should also handle overloads and capacity.
-     * This is what I probably want to use between blocks...
-     * fuck if I know
+    /* This method is similar to {@link #changeHeat(long heatDifference)}
+     *
+     *
      */
-    long acceptHeatFromNetwork(Direction side);
+    long acceptHeatFromNetwork(Direction side, long heatDifference);
 
     //Returns: if this container can accept heat from this side.
     boolean inputsHeat(Direction side);
 
-    //Returns: if this container can eject heat from this side.
+    // @returns if this container can eject heat from this side.
     default boolean outputsHeat(Direction side){
         return false;
     };
 
-    /*  The Magic Sauce.
-     *   for handling logic within machine running behaviors, DO NOT. Use this for the eventual pipenet
-     *   update this desc to properly reflect interface methods once they are adapted.
+    /*  used for changing heat value internally in the block
      */
     long changeHeat(long heatDifference);
 
@@ -39,6 +37,8 @@ public interface IHeatContainer extends IHeatInfoProvider {
     default long removeHeat(long heatToRemove) {
         return -changeHeat(-heatToRemove);
     }
+
+
     //Heat Containers Do not have an insertion limit. Thus we melt the block if they overload.
     //TODO : The Math that actually makes this behave less psychotic. And actually function.
     default boolean getHeatCanBeOverloaded(){
@@ -47,21 +47,26 @@ public interface IHeatContainer extends IHeatInfoProvider {
         }
         return false;
     }
+
     //Reports the Current Thermal Maximum a container can withstand
     long getOverloadLimit();
+
+
     //Reports the Current Temperature.
     long getHeatStorage();
 
     @Override
     default HeatInfo getHeatInfo(){
-        return new HeatInfo(getHeatStorage(), getHeatStorage(),getHeatCanBeOverloaded());
+        return new HeatInfo(getOverloadLimit(), getHeatStorage(), getHeatCanBeOverloaded());
     };
+
     // Params needs to build the container.
     //This Abomination - Allows Going below Absolute Zero
     @Override
     default boolean supportsImpossibleHeatValues(){
         return false;
     };
+
     //Max amount of heat that can be output per tick
     default long getEjectLimit(){
         return 0L;
@@ -81,7 +86,7 @@ public interface IHeatContainer extends IHeatInfoProvider {
 
     IHeatContainer DEFAULT = new IHeatContainer() {
         @Override
-        public long acceptHeatFromNetwork(Direction side) {
+        public long acceptHeatFromNetwork(Direction side, long heatDiff) {
             return 0;
         }
 

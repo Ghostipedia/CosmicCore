@@ -41,7 +41,7 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
 
 
     @Override
-    public long acceptHeatFromNetwork(Direction side) {
+    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
         return 0;
     }
 

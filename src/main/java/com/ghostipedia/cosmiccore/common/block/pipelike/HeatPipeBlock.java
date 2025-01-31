@@ -1,5 +1,6 @@
 package com.ghostipedia.cosmiccore.common.block.pipelike;
 
+import com.ghostipedia.cosmiccore.api.capability.recipe.IHeatContainer;
 import com.ghostipedia.cosmiccore.api.material.CosmicPropertyKeys;
 import com.ghostipedia.cosmiccore.api.pipe.HeatPipeProperties;
 import com.ghostipedia.cosmiccore.common.blockentity.pipelike.HeatPipeBlockEntity;
@@ -21,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,6 +34,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+import static com.ghostipedia.cosmiccore.api.capability.CosmicCapabilities.CAPABILITY_HEAT_CONTAINER;
+
 public class HeatPipeBlock extends MaterialPipeBlock<HeatPipeType, HeatPipeProperties, LevelHeatPipeNet> {
     public PipeBlockRenderer renderer;
     @Getter
@@ -40,6 +44,11 @@ public class HeatPipeBlock extends MaterialPipeBlock<HeatPipeType, HeatPipePrope
     public HeatPipeBlock(BlockBehaviour.Properties properties, HeatPipeType type, Material material) {
         super(properties, type, material);
         pipeModel = createPipeModel();
+    }
+
+    @Override
+    public int tinted(BlockState blockState, @Nullable BlockAndTintGetter blockAndTintGetter, @Nullable BlockPos blockPos, int index) {
+        return index == 0 || index == 1 ? material.getMaterialRGB() : -1;
     }
 
     @Override
@@ -64,12 +73,13 @@ public class HeatPipeBlock extends MaterialPipeBlock<HeatPipeType, HeatPipePrope
 
     @Override
     public boolean canPipesConnect(IPipeNode<HeatPipeType, HeatPipeProperties> selfTile, Direction side, IPipeNode<HeatPipeType, HeatPipeProperties> sideTile) {
-        return false;
+        return selfTile instanceof HeatPipeBlockEntity && sideTile instanceof HeatPipeBlockEntity;
     }
 
     @Override
     public boolean canPipeConnectToBlock(IPipeNode<HeatPipeType, HeatPipeProperties> selfTile, Direction side, @Nullable BlockEntity tile) {
-        return false;
+        if(tile == null) return false;
+        return tile.getCapability(CAPABILITY_HEAT_CONTAINER, side.getOpposite()).isPresent();
     }
 
     @Override

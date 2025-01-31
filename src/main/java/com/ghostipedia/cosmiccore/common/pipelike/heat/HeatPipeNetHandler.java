@@ -20,12 +20,12 @@ public class HeatPipeNetHandler implements IHeatContainer {
         this.facing  = facing;
     }
 
-    public void udpateNet(HeatPipeNet net) {
+    public void updateNet(HeatPipeNet net) {
         this.net = net;
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side) {
+    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
         return 0;
     }
 

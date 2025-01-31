@@ -1,5 +1,6 @@
 package com.ghostipedia.cosmiccore;
 
+import com.ghostipedia.cosmiccore.api.capability.HeatCapabilityProvider;
 import com.ghostipedia.cosmiccore.api.pattern.CosmicPredicates;
 import com.ghostipedia.cosmiccore.api.registries.CosmicRegistration;
 import com.ghostipedia.cosmiccore.api.capability.CosmicCapabilities;
@@ -13,6 +14,7 @@ import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.StellarStarBal
 import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.modular.ModularizedMultis;
 import com.ghostipedia.cosmiccore.gtbridge.CosmicRecipeTypes;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
+import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialEvent;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialRegistryEvent;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.PostMaterialEvent;
@@ -24,7 +26,9 @@ import com.gregtechceu.gtceu.common.block.CoilBlock;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.lowdragmc.lowdraglib.Platform;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -34,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 
 @Mod(CosmicCore.MOD_ID)
+@Mod.EventBusSubscriber
 public class CosmicCore {
     public static final String MOD_ID = "cosmiccore", NAME = "CosmicCore";
     public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
@@ -89,7 +94,7 @@ public class CosmicCore {
     }
 
     @SubscribeEvent
-    public void onLoadComplete(FMLLoadCompleteEvent event) {
+    public static void onLoadComplete(FMLLoadCompleteEvent event) {
         GTCEuAPI.HEATING_COILS.remove(CoilBlock.CoilType.RTMALLOY);
         GTCEuAPI.HEATING_COILS.remove(CoilBlock.CoilType.HSSG);
         GTCEuAPI.HEATING_COILS.remove(CoilBlock.CoilType.NAQUADAH);
@@ -113,7 +118,14 @@ public class CosmicCore {
     }
 
     @SubscribeEvent
-    public void registerCapabilities(RegisterCapabilitiesEvent event) {
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         CosmicCapabilities.register(event);
+    }
+
+    @SubscribeEvent
+    public static void attachCapabilities(AttachCapabilitiesEvent<BlockEntity> event) {
+        if(event.getObject() instanceof MetaMachineBlockEntity mmbe) {
+            event.addCapability(CosmicCore.id("heat_capability"), new HeatCapabilityProvider(mmbe));
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.ghostipedia.cosmiccore.api.pipe;
 
-import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.IMaterialProperty;
 import com.gregtechceu.gtceu.api.data.chemical.material.properties.MaterialProperties;
 import lombok.Getter;
@@ -12,11 +11,11 @@ public class HeatPipeProperties implements IMaterialProperty {
     @Getter
     private final float maxTemp;
     @Getter
-    private final float transferRate;
+    private final float maxTransferRate;
 
     public HeatPipeProperties(float temp, float rate) {
         this.maxTemp = temp;
-        this.transferRate = rate;
+        this.maxTransferRate = rate;
     }
 
     @Override
@@ -26,6 +25,6 @@ public class HeatPipeProperties implements IMaterialProperty {
 
     @Override
     public int hashCode() {
-        return Objects.hash(maxTemp, transferRate);
+        return Objects.hash(maxTemp, maxTransferRate);
     }
 }

@@ -73,7 +73,7 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side) {
+    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
         return 0;
     }
 

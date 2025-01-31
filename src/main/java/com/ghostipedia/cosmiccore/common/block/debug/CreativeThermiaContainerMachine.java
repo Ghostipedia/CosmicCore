@@ -56,7 +56,7 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side) {
+    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
         return 0;
     }
 
