@@ -220,7 +220,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
             float surrounding = getSurroundingTemp(neighborHeats);
 
-            if(Math.abs(surrounding) >= (0.005f * currentTemp))
+            if(Math.abs(surrounding) >= Math.abs(0.005f * currentTemp))
                 runningTemp = this.currentTemp + (long)(surrounding * 1.f);
 
             //System.out.println(currentTemp);
@@ -262,12 +262,13 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         var w = neighborHeats.get(Direction.WEST);
         var u = neighborHeats.get(Direction.UP);
         var d = neighborHeats.get(Direction.DOWN);
-        float northSouth = (n.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp) +
-                (s.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
-        float eastWest = (e.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp)  +
-                (w.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
-        float upDown = (u.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp) +
-                (d.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
+        var thermalRadiance = this.getNodeData().getMaxTransferRate();
+        float northSouth = ((n.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance +
+                (s.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
+        float eastWest = ((e.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance  +
+                (w.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
+        float upDown = ((u.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance +
+                (d.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
 
         return (northSouth + eastWest + upDown);
     }
