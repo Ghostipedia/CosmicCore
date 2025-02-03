@@ -266,36 +266,36 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
         float northSouth = 0;
         if(n.getHeatInfo().currentTemp() > this.currentTemp) {
-            northSouth += (n.getHeatInfo().currentTemp() - this.currentTemp) * n.getThermalConductance();
+            northSouth += (float) ((n.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (n.getThermalConductance() - thermalRadiance)));
         } else {
             northSouth += (n.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(s.getHeatInfo().currentTemp() > this.currentTemp) {
-            northSouth += (s.getHeatInfo().currentTemp() - this.currentTemp) * s.getThermalConductance();
+            northSouth += (float) ((s.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (s.getThermalConductance() - thermalRadiance)));
         } else {
             northSouth += (s.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
 
         float eastWest = 0;
         if(e.getHeatInfo().currentTemp() > this.currentTemp) {
-            eastWest += (e.getHeatInfo().currentTemp() - this.currentTemp) * e.getThermalConductance();
+            eastWest += (float) ((e.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (e.getThermalConductance() - thermalRadiance)));
         } else {
             eastWest += (e.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(w.getHeatInfo().currentTemp() > this.currentTemp) {
-            eastWest += (w.getHeatInfo().currentTemp() - this.currentTemp) * w.getThermalConductance();
+            eastWest += (float) ((w.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (w.getThermalConductance() - thermalRadiance)));
         } else {
             eastWest += (w.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
 
         float upDown = 0;
         if(u.getHeatInfo().currentTemp() > this.currentTemp) {
-            upDown += (u.getHeatInfo().currentTemp() - this.currentTemp) * u.getThermalConductance();
+            upDown += (float) ((u.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (u.getThermalConductance() - thermalRadiance)));
         } else {
             upDown += (u.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(d.getHeatInfo().currentTemp() > this.currentTemp) {
-            upDown += (d.getHeatInfo().currentTemp() - this.currentTemp) * d.getThermalConductance();
+            upDown += (float) ((d.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (d.getThermalConductance() - thermalRadiance)));
         } else {
             upDown += (d.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
