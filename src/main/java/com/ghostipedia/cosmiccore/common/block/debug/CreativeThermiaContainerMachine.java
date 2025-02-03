@@ -150,7 +150,7 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
 
     @Override
     public float getThermalConductance() {
-        return 1.0f;
+        return 0.9f;
     }
 }
 

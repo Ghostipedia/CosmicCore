@@ -43,8 +43,8 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     private HeatPipeNetHandler defaultHandler;
 
     @Getter
-    private long currentTemp;
-    private long runningTemp;
+    private double currentTemp;
+    private double runningTemp;
     public byte lastReceivedFrom = 0, oldLastReceivedFrom = 0;
 
     private TickableSubscription updateSubs;
@@ -186,10 +186,10 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         }
     };
 
-    private void addTemp(long temp) {
+    private void addTemp(double temp) {
         currentTemp += temp;
         var container = getHeatContainer(null);
-        if(container != null) container.addHeat(temp);
+        if(container != null) container.addHeat((long)temp);
     }
 
     public void update() {
@@ -220,8 +220,8 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
             float surrounding = getSurroundingTemp(neighborHeats);
 
-            if(Math.abs(surrounding) >= Math.abs(0.005f * currentTemp))
-                runningTemp = this.currentTemp + (long)(surrounding * 1.f);
+            if(Math.abs(surrounding) >= Math.min(0.01f, 0.001f * currentTemp))
+                runningTemp = this.currentTemp + (surrounding * 1.f);
 
             //System.out.println(currentTemp);
 
@@ -263,12 +263,42 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         var u = neighborHeats.get(Direction.UP);
         var d = neighborHeats.get(Direction.DOWN);
         var thermalRadiance = this.getNodeData().getMaxTransferRate();
-        float northSouth = ((n.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance +
-                (s.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
-        float eastWest = ((e.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance  +
-                (w.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
-        float upDown = ((u.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance +
-                (d.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance) / 2.f;
+
+        float northSouth = 0;
+        if(n.getHeatInfo().currentTemp() > this.currentTemp) {
+            northSouth += (n.getHeatInfo().currentTemp() - this.currentTemp) * n.getThermalConductance();
+        } else {
+            northSouth += (n.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
+        if(s.getHeatInfo().currentTemp() > this.currentTemp) {
+            northSouth += (s.getHeatInfo().currentTemp() - this.currentTemp) * s.getThermalConductance();
+        } else {
+            northSouth += (s.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
+
+        float eastWest = 0;
+        if(e.getHeatInfo().currentTemp() > this.currentTemp) {
+            eastWest += (e.getHeatInfo().currentTemp() - this.currentTemp) * e.getThermalConductance();
+        } else {
+            eastWest += (e.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
+        if(w.getHeatInfo().currentTemp() > this.currentTemp) {
+            eastWest += (w.getHeatInfo().currentTemp() - this.currentTemp) * w.getThermalConductance();
+        } else {
+            eastWest += (w.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
+
+        float upDown = 0;
+        if(u.getHeatInfo().currentTemp() > this.currentTemp) {
+            upDown += (u.getHeatInfo().currentTemp() - this.currentTemp) * u.getThermalConductance();
+        } else {
+            upDown += (u.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
+        if(d.getHeatInfo().currentTemp() > this.currentTemp) {
+            upDown += (d.getHeatInfo().currentTemp() - this.currentTemp) * d.getThermalConductance();
+        } else {
+            upDown += (d.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
+        }
 
         return (northSouth + eastWest + upDown);
     }
@@ -292,6 +322,6 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     @Override
     public List<Component> getDataInfo(PortableScannerBehavior.DisplayMode mode) {
         //runningTemp += 1000;
-        return List.of(Component.literal("Current Temp: " + getHeatContainer(null).getHeatInfo().currentTemp() + ", Running Temp: " + this.runningTemp));
+        return List.of(Component.literal("Current Temp: " + getHeatContainer(null).getHeatInfo().currentTemp() + ", Running Temp: " + (long)this.runningTemp));
     }
 }

@@ -48,7 +48,7 @@ public class HeatPipeNetHandler implements IHeatContainer {
     public long getCurrentTemperature() {
         var container = pipe.getHeatContainer(null);
         if(container != null)
-            return pipe.getCurrentTemp();
+            return (long)pipe.getCurrentTemp();
         return HeatPipeBlockEntity.AMBIENT_TEMP.getCurrentTemperature();
     }
 
