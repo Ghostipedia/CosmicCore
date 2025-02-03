@@ -19,6 +19,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -266,36 +267,36 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
         float northSouth = 0;
         if(n.getHeatInfo().currentTemp() > this.currentTemp) {
-            northSouth += (float) ((n.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (n.getThermalConductance() - thermalRadiance)));
+            northSouth += (float) ((n.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (n.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             northSouth += (n.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(s.getHeatInfo().currentTemp() > this.currentTemp) {
-            northSouth += (float) ((s.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (s.getThermalConductance() - thermalRadiance)));
+            northSouth += (float) ((s.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (s.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             northSouth += (s.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
 
         float eastWest = 0;
         if(e.getHeatInfo().currentTemp() > this.currentTemp) {
-            eastWest += (float) ((e.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (e.getThermalConductance() - thermalRadiance)));
+            eastWest += (float) ((e.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (e.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             eastWest += (e.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(w.getHeatInfo().currentTemp() > this.currentTemp) {
-            eastWest += (float) ((w.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (w.getThermalConductance() - thermalRadiance)));
+            eastWest += (float) ((w.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (w.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             eastWest += (w.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
 
         float upDown = 0;
         if(u.getHeatInfo().currentTemp() > this.currentTemp) {
-            upDown += (float) ((u.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (u.getThermalConductance() - thermalRadiance)));
+            upDown += (float) ((u.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (u.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             upDown += (u.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
         if(d.getHeatInfo().currentTemp() > this.currentTemp) {
-            upDown += (float) ((d.getHeatInfo().currentTemp() - this.currentTemp) * Math.min(1.0f, 1.f / (d.getThermalConductance() - thermalRadiance)));
+            upDown += (float) ((d.getHeatInfo().currentTemp() - this.currentTemp) * Mth.clamp(1.f / (d.getThermalConductance() - thermalRadiance), 0.f, 1.0f));
         } else {
             upDown += (d.getHeatInfo().currentTemp() - this.currentTemp) * thermalRadiance;
         }
