@@ -11,9 +11,11 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.block.ActiveBlock;
 import com.gregtechceu.gtceu.api.block.ICoilType;
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.client.renderer.block.TextureOverrideRenderer;
 import com.gregtechceu.gtceu.common.block.CoilBlock;
 import com.gregtechceu.gtceu.common.data.GTModels;
+import com.gregtechceu.gtceu.common.registry.GTRegistration;
 import com.lowdragmc.lowdraglib.Platform;
 import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
 import com.tterrag.registrate.providers.DataGenContext;
@@ -80,8 +82,11 @@ public class CosmicBlocks {
     public static final BlockEntry<Block> VOMAHINE_CERTIFIED_INTERSTELLAR_GRADE_CASING = createCasingBlock("vomahine_certified_interstellar_grade_casing", CosmicCore.id("block/casings/solid/vomahine_certified_interstellar_grade_casing"));
     public static final BlockEntry<Block> VOMAHINE_ULTRA_POWERED_CASING = createCasingBlock("vomahine_ultra_powered_casing", CosmicCore.id("block/casings/solid/vomahine_ultra_powered_casing"));
     public static final BlockEntry<Block> HIGHLY_CONDUCTIVE_FISSION_CASING = createCasingBlock("highly_conductive_fission_casing", CosmicCore.id("block/casings/solid/highly_conductive_fission_casing"));
-
+    //Active Blocks
+    public static final BlockEntry<ActiveBlock> CASING_HEAT_VENT = createActiveCasing("heat_fan",
+            "block/variant/heat_fan");
     //This is a Bunch of Rendering Magic I barely understand (See: I Don't understand at all) ~Ghost
+    //Update 2025, I understand it, and I do not like it.
     private static BlockEntry<Block> createGlassCasingBlock(String name, ResourceLocation texture, Supplier<Supplier<RenderType>> type) {
         return createCasingBlock(name, GlassBlock::new, texture, () -> Blocks.GLASS, type);
     }
@@ -142,6 +147,17 @@ public class CosmicBlocks {
                 .register();
         GTCEuAPI.HEATING_COILS.put(coilType, coilBlock);
         return coilBlock;
+    }
+    protected static BlockEntry<ActiveBlock> createActiveCasing(String name, String baseModelPath) {
+        return REGISTRATE.block(name, ActiveBlock::new)
+                .initialProperties(() -> Blocks.NETHERITE_BLOCK)
+                .addLayer(() -> RenderType::cutoutMipped)
+                .blockstate(GTModels.createActiveModel(CosmicCore.id(baseModelPath)))
+                .tag(RecipeTags.MINEABLE_WITH_WRENCH, BlockTags.MINEABLE_WITH_PICKAXE)
+                .item(BlockItem::new)
+                .model((ctx, prov) -> prov.withExistingParent(prov.name(ctx), CosmicCore.id(baseModelPath)))
+                .build()
+                .register();
     }
     private static BlockEntry<MagnetBlock> createMagnetBlock(IMagnetType magnetType) {
         BlockEntry<MagnetBlock> magnetBlock = REGISTRATE.block("%s_magnet".formatted(magnetType.getName()), p -> new MagnetBlock(p, magnetType))
