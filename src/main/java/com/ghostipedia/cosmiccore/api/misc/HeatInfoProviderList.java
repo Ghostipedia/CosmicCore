@@ -25,11 +25,16 @@ public class HeatInfoProviderList implements IHeatInfoProvider {
         for(IHeatInfoProvider heatInfoProvider : list){
             HeatInfo heatInfo = heatInfoProvider.getHeatInfo();
             capacity = heatInfo.capacity();
-            stored = heatInfo.stored();
+            stored = heatInfo.currentTemp();
             overload = heatInfo.overload();
         }
         return new HeatInfo(capacity,stored,overload);
 
+    }
+
+    @Override
+    public float getThermalConductance() {
+        return 0;
     }
 
     @Override

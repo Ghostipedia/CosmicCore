@@ -4,10 +4,13 @@ import com.ghostipedia.cosmiccore.api.capability.IHeatInfoProvider;
 import net.minecraft.core.Direction;
 
 public interface IHeatContainer extends IHeatInfoProvider {
-    /* This method is similar to {@link #changeHeat(long heatDifference)}
+    /** This method is similar to {@link #changeHeat(long heatDifference)}
+     * <br>
      *
      *
-     */
+     * This method is the logic for when this container RECIEVES heat from the specified direction,
+     * used when heat goes between 2 blocks
+    */
     long acceptHeatFromNetwork(Direction side, long heatDifference);
 
     //Returns: if this container can accept heat from this side.
@@ -41,23 +44,18 @@ public interface IHeatContainer extends IHeatInfoProvider {
 
     //Heat Containers Do not have an insertion limit. Thus we melt the block if they overload.
     //TODO : The Math that actually makes this behave less psychotic. And actually function.
-    default boolean getHeatCanBeOverloaded(){
-        if (getOverloadLimit() > getHeatStorage()){
-            return getHeatInfo().overload();
-        }
-        return false;
-    }
+    default boolean getHeatCanBeOverloaded() { return false; }
 
     //Reports the Current Thermal Maximum a container can withstand
     long getOverloadLimit();
 
 
     //Reports the Current Temperature.
-    long getHeatStorage();
+    long getCurrentTemperature();
 
     @Override
     default HeatInfo getHeatInfo(){
-        return new HeatInfo(getOverloadLimit(), getHeatStorage(), getHeatCanBeOverloaded());
+        return new HeatInfo(getOverloadLimit(), getCurrentTemperature(), getHeatCanBeOverloaded());
     };
 
     // Params needs to build the container.
@@ -106,7 +104,12 @@ public interface IHeatContainer extends IHeatInfoProvider {
         }
 
         @Override
-        public long getHeatStorage() {
+        public long getCurrentTemperature() {
+            return 0;
+        }
+
+        @Override
+        public float getThermalConductance() {
             return 0;
         }
     };

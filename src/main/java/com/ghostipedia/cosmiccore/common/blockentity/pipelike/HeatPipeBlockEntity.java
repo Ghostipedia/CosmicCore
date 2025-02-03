@@ -8,12 +8,12 @@ import com.ghostipedia.cosmiccore.common.pipelike.heat.HeatPipeNetHandler;
 import com.ghostipedia.cosmiccore.common.pipelike.heat.HeatPipeType;
 import com.ghostipedia.cosmiccore.common.pipelike.heat.LevelHeatPipeNet;
 import com.gregtechceu.gtceu.api.blockentity.PipeBlockEntity;
-import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IDataInfoProvider;
 import com.gregtechceu.gtceu.common.item.PortableScannerBehavior;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -42,6 +42,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     public IHeatContainer heatContainer;
     private HeatPipeNetHandler defaultHandler;
 
+    @Getter
     private long currentTemp;
     private long runningTemp;
     public byte lastReceivedFrom = 0, oldLastReceivedFrom = 0;
@@ -51,6 +52,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     public HeatPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
         currentTemp = 230;
+        runningTemp = currentTemp;
     }
 
     @Override
@@ -110,7 +112,9 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == CosmicCapabilities.CAPABILITY_HEAT_CONTAINER) {
-            return CosmicCapabilities.CAPABILITY_HEAT_CONTAINER.orEmpty(cap, LazyOptional.of(() -> getHeatContainer(side)));
+            var container = getHeatContainer(side);
+            if(container != null)
+                return CosmicCapabilities.CAPABILITY_HEAT_CONTAINER.orEmpty(cap, LazyOptional.of(() -> container));
         }
         return super.getCapability(cap, side);
     }
@@ -127,6 +131,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         }
     }
 
+    @Nullable
     public IHeatContainer getHeatContainer(Direction side) {
         if(heatContainer == null) {
             if(side != null && !isConnected(side)) return null;
@@ -149,38 +154,76 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         defaultHandler = new HeatPipeNetHandler(net, this, null);
     }
 
+    public static IHeatContainer AMBIENT_TEMP = new IHeatContainer() {
+        @Override
+        public long acceptHeatFromNetwork(Direction side, long heatDifference) {
+            return 0;
+        }
+
+        @Override
+        public boolean inputsHeat(Direction side) {
+            return false;
+        }
+
+        @Override
+        public long changeHeat(long heatDifference) {
+            return 0;
+        }
+
+        @Override
+        public long getOverloadLimit() {
+            return 0;
+        }
+
+        @Override
+        public long getCurrentTemperature() {
+            return 230;
+        }
+
+        @Override
+        public float getThermalConductance() {
+            return 0.001f;
+        }
+    };
+
+    private void addTemp(long temp) {
+        currentTemp += temp;
+        var container = getHeatContainer(null);
+        if(container != null) container.addHeat(temp);
+    }
 
     public void update() {
-        Map<Direction, IHeatContainer> neighborHeats = new EnumMap<>(Direction.class);
+        EnumMap<Direction, IHeatContainer> neighborHeats = new EnumMap<>(Direction.class);
 
         if (!level.isClientSide) {
+            addTemp(runningTemp - currentTemp);
             for(byte i = 0; i < 6; i++) {
                 byte side = (byte) (i % 6);
                 Direction facing = Direction.values()[i];
 
                 // horse
                 BlockEntity neighbor = getNeighbor(facing);
-                if (neighbor == null) { // maybe check for air dissipation?
-
+                if(neighbor == null) {
+                    neighborHeats.put(facing, AMBIENT_TEMP); // ambient temp?
                     continue;
                 }
-                IHeatContainer neighborHeatContainer = neighbor.getCapability(CosmicCapabilities.CAPABILITY_HEAT_CONTAINER, facing.getOpposite()).resolve().orElse(null);
-                if (neighborHeatContainer != null)
-                    neighborHeats.put(facing, neighborHeatContainer);
-                else
+
+                IHeatContainer neighborHeatContainer;
+                var cap = neighbor.getCapability(CosmicCapabilities.CAPABILITY_HEAT_CONTAINER, facing.getOpposite()).resolve();
+                if(cap.isEmpty()) {
                     neighborHeats.put(facing, getHeatContainer(null));
+                } else {
+                    neighborHeatContainer = cap.get();
+                    neighborHeats.put(facing, neighborHeatContainer);
+                }
             }
 
-            float surrounding = (neighborHeats.get(Direction.NORTH).getHeatInfo().stored() +
-                    neighborHeats.get(Direction.SOUTH).getHeatInfo().stored() +
-                    neighborHeats.get(Direction.EAST).getHeatInfo().stored() +
-                    neighborHeats.get(Direction.WEST).getHeatInfo().stored() +
-                    neighborHeats.get(Direction.UP).getHeatInfo().stored() +
-                    neighborHeats.get(Direction.DOWN).getHeatInfo().stored() -
-                    (6 * getHeatContainer(null).getHeatInfo().stored())) / 3.f;
+            float surrounding = getSurroundingTemp(neighborHeats);
 
-            if(surrounding >= 5.0f)
-                runningTemp = this.currentTemp + (int)(getNodeData().getMaxTransferRate() * surrounding * .2f);
+            if(Math.abs(surrounding) >= (0.005f * currentTemp))
+                runningTemp = this.currentTemp + (long)(surrounding * 1.f);
+
+            //System.out.println(currentTemp);
 
             /*for(byte i = 0; i < 6; i++) {
                 byte side = (byte) (i % 6);
@@ -199,8 +242,8 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
                 IHeatContainer neighborHeatContainer = neighbor.getCapability(CosmicCapabilities.CAPABILITY_HEAT_CONTAINER, facing.getOpposite()).resolve().orElse(null);
                 if(neighborHeatContainer == null) continue;
 
-                long neighborTemp = neighborHeatContainer.getHeatInfo().stored();
-                currentTemp = getHeatContainer(null).getHeatInfo().stored();
+                long neighborTemp = neighborHeatContainer.getHeatInfo().currentTemp();
+                currentTemp = getHeatContainer(null).getHeatInfo().currentTemp();
                 long deltaHeat = currentTemp - neighborTemp;
                 float transferRate = 0.1f;
                 long tempA = currentTemp - (long)(deltaHeat * transferRate);
@@ -210,6 +253,23 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
                 neighborHeatContainer.addHeat((long)(deltaHeat * transferRate)); // add heat from neighbor
             }*/
         }
+    }
+
+    private float getSurroundingTemp(EnumMap<Direction, IHeatContainer> neighborHeats) {
+        var n = neighborHeats.get(Direction.NORTH);
+        var s = neighborHeats.get(Direction.SOUTH);
+        var e = neighborHeats.get(Direction.EAST);
+        var w = neighborHeats.get(Direction.WEST);
+        var u = neighborHeats.get(Direction.UP);
+        var d = neighborHeats.get(Direction.DOWN);
+        float northSouth = (n.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp) +
+                (s.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
+        float eastWest = (e.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp)  +
+                (w.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
+        float upDown = (u.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp) +
+                (d.getHeatInfo().currentTemp() * e.getThermalConductance() - this.currentTemp);
+
+        return (northSouth + eastWest + upDown);
     }
 
     @Override
@@ -230,7 +290,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     @NotNull
     @Override
     public List<Component> getDataInfo(PortableScannerBehavior.DisplayMode mode) {
-
-        return null;
+        //runningTemp += 1000;
+        return List.of(Component.literal("Current Temp: " + getHeatContainer(null).getHeatInfo().currentTemp() + ", Running Temp: " + this.runningTemp));
     }
 }

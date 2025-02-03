@@ -98,8 +98,12 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     }
 
     @Override
-    public long getHeatStorage() {
+    public long getCurrentTemperature() {
         return 0;
     }
 
+    @Override
+    public float getThermalConductance() {
+        return 0;
+    }
 }

@@ -20,6 +20,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -94,6 +95,14 @@ public class HeatPipeBlock extends MaterialPipeBlock<HeatPipeType, HeatPipePrope
 
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+        if(level.isClientSide) return;
+        var me = level.getBlockEntity(pos);
+        if(me instanceof HeatPipeBlockEntity heatBlockPipe) {
+            if (entity instanceof Player player) {
+                player.displayClientMessage(heatBlockPipe.getDataInfo(null).get(0), false);
+            }
+        }
+
         super.entityInside(state, level, pos, entity);
     }
 }

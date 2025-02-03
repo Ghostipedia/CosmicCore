@@ -1,5 +1,6 @@
 package com.ghostipedia.cosmiccore.common.block.debug;
 
+import com.ghostipedia.cosmiccore.api.capability.CosmicCapabilities;
 import com.ghostipedia.cosmiccore.api.capability.recipe.IHeatContainer;
 import com.ghostipedia.cosmiccore.api.machine.trait.NotifiableThermiaContainer;
 import com.gregtechceu.gtceu.api.GTValues;
@@ -56,17 +57,51 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        subscribeServerTick(this::update);
+    }
+
+
+
+    // This outputs heat to any adjacent container
+    protected void update() {
+        if(!source || !active) return;
+
+        for(var facing : Direction.values()) {
+            var opposite = facing.getOpposite();
+            var neighbor = getLevel().getBlockEntity(this.getPos().relative(facing));
+            if(neighbor == null) continue;
+
+            IHeatContainer container = neighbor.getCapability(CosmicCapabilities.CAPABILITY_HEAT_CONTAINER, opposite).resolve().orElse(null);
+            if(container != null && container.inputsHeat(opposite)) {
+                container.acceptHeatFromNetwork(opposite, heat);
+            }
+        }
+
+        lastAverageHeatIOPerTick = heat;
+    }
+
+    @Override
     public long acceptHeatFromNetwork(Direction side, long heatDiff) {
         return 0;
     }
 
     @Override
     public boolean inputsHeat(Direction side) {
-        return false;
+        return !source;
+    }
+
+    @Override
+    public boolean outputsHeat(Direction side) {
+        return source;
     }
 
     @Override
     public long changeHeat(long heatDifference) {
+        if(source || !active) {
+            return 0;
+        }
         return 0;
     }
 
@@ -76,15 +111,15 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public long getHeatStorage() {
-        return 0;
+    public long getCurrentTemperature() {
+        return heat;
     }
 
     @Override
     public ModularUI createUI(Player entityPlayer) {
         return new ModularUI(176, 166, this, entityPlayer)
                 .background(GuiTextures.BACKGROUND)
-                .widget(new LabelWidget(7, 32, "gtceu.creative.energy.voltage"))
+                .widget(new LabelWidget(7, 32, "cosmiccore.recipe.temperature"))
                 .widget(new TextFieldWidget(9, 47, 152, 16, () -> String.valueOf(heat),
                         value -> {
                             heat = Long.parseLong(value);
@@ -111,6 +146,11 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
                                 new GuiTextureGroup(ResourceBorderTexture.BUTTON_COMMON,
                                         new TextTexture("gtceu.creative.energy.source")))
                         .setPressed(source));
+    }
+
+    @Override
+    public float getThermalConductance() {
+        return 1.0f;
     }
 }
 

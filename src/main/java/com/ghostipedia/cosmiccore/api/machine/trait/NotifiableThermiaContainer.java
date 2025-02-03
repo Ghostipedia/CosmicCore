@@ -4,12 +4,12 @@ import com.ghostipedia.cosmiccore.api.capability.recipe.IHeatContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
-import com.gregtechceu.gtceu.api.machine.trait.NotifiableEnergyContainer;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +25,9 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     @DescSynced
     @Getter
     private final long currentTemp;
+    @Setter
     private Predicate<Direction> sideInputCondition;
+    @Setter
     private Predicate<Direction> sideOutputCondition;
     public NotifiableThermiaContainer(MetaMachine machine, IO io, long overloadLimit, long currentTemp) {
         super(machine);
@@ -56,8 +58,8 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     }
 
     @Override
-    public long getHeatStorage() {
-        return this.getHeatInfo().stored();
+    public long getCurrentTemperature() {
+        return this.getHeatInfo().currentTemp();
     }
 
     @Override
@@ -79,12 +81,9 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     public RecipeCapability<Integer> getCapability() {
         return null;
     }
-    public void setSideInputCondition(final Predicate<Direction> sideInputCondition) {
-        this.sideInputCondition = sideInputCondition;
-    }
 
-    public void setSideOutputCondition(final Predicate<Direction> sideOutputCondition) {
-        this.sideOutputCondition = sideOutputCondition;
+    @Override
+    public float getThermalConductance() {
+        return 0;
     }
-
 }

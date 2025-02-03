@@ -10,6 +10,7 @@ public class HeatPipeProperties implements IMaterialProperty {
 
     @Getter
     private final float maxTemp;
+    // do not go above 1 or death occurs
     @Getter
     private final float maxTransferRate;
 

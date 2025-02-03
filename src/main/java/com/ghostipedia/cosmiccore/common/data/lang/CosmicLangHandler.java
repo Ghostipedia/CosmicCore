@@ -13,6 +13,7 @@ public class CosmicLangHandler {
     public static void init(RegistrateLangProvider provider) {
         replace(provider,"cosmiccore.recipe.soulIn","Soul Input: %s");
         replace(provider,"cosmiccore.recipe.soulOut", "Soul Output: %s");
+        replace(provider,"cosmiccore.recipe.temperature", "Temperature:");
         replace(provider,"cosmiccore.wire_coil.magnet_capacity", "  §fMax Field Strength: §f%s Tesla");
         replace(provider,"cosmiccore.wire_coil.magnet_regen", "  §5Field Regen Rate: %s Tesla/t");
         replace(provider,"cosmiccore.wire_coil.eu_multiplier", "  §aMagnet EU Cost: §c%s EU/t");

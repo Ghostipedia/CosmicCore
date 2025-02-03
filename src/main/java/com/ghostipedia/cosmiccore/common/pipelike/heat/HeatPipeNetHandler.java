@@ -45,7 +45,15 @@ public class HeatPipeNetHandler implements IHeatContainer {
     }
 
     @Override
-    public long getHeatStorage() {
-        return 0;
+    public long getCurrentTemperature() {
+        var container = pipe.getHeatContainer(null);
+        if(container != null)
+            return pipe.getCurrentTemp();
+        return HeatPipeBlockEntity.AMBIENT_TEMP.getCurrentTemperature();
+    }
+
+    @Override
+    public float getThermalConductance() {
+        return pipe.getNodeData().getMaxTransferRate();
     }
 }
