@@ -42,6 +42,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+import wayoftime.bloodmagic.core.util.PlayerUtil;
+import wayoftime.bloodmagic.util.helper.PlayerHelper;
 
 import java.util.*;
 
@@ -128,8 +130,9 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
 
     private int calculateEnergyUsage() {
         int receivers = getOpticalHatches().size();
-        var maintenanceIssues = getMaintenanceIssues();
-        return receivers * maintenanceIssues * EUT_PER_HATCH_CHAINED;
+        boolean hasMaintenance = ConfigHolder.INSTANCE.machines.enableMaintenance && this.maintenance != null;
+        var maintenanceMultiplier = hasMaintenance ? (1 + ((float) this.maintenance.getNumMaintenanceProblems() / 10)): 1;
+        return (int) Math.floor(receivers * maintenanceMultiplier * EUT_PER_HATCH_CHAINED);
     }
 
     @Override
@@ -145,14 +148,18 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
     @Override
     public void addDisplayText(List<Component> textList) {
         MultiblockDisplayText.builder(textList, isFormed())
-                .setWorkingStatus(true, isActive() && isWorkingEnabled()) // transform into two-state system for display
+                .setWorkingStatus(true, isActive() && isWorkingEnabled())// transform into two-state system for display
                 .setWorkingStatusKeys(
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.idling",
                         "gtceu.multiblock.data_bank.providing")
                 .addEnergyUsageExactLine(calculateEnergyUsage())
-                .addWorkingStatusLine();
+                .addWorkingStatusLine()
+                .addEmptyLine()
+                .addCustom(list -> OwnershipUtils.addOwnerLine(list, getHolder().getOwner()));
     }
+
+
 
     private void addHatchesToWirelessNetwork() {
         var owner = getHolder().getOwner();
@@ -179,12 +186,5 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
         }
 
         return hatches;
-    }
-
-    private int getMaintenanceIssues() {
-        for (var part : getParts())
-            if (part instanceof IMaintenanceMachine maintenanceMachine)
-                return maintenanceMachine.getNumMaintenanceProblems();
-        return 0;
     }
 }
