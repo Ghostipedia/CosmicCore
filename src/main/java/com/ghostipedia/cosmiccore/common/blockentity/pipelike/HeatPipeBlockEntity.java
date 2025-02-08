@@ -12,6 +12,7 @@ import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IDataInfoProvider;
 import com.gregtechceu.gtceu.common.item.PortableScannerBehavior;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -116,7 +117,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
         }
         return heatContainer;
     }
-
+    //todo; make map of temps and dims
     public double getEnvironmentalTemperature() {
         return 300;
     }
@@ -199,6 +200,6 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     @Override
     public List<Component> getDataInfo(PortableScannerBehavior.DisplayMode mode) {
         //runningTemp += 1000;
-        return List.of(Component.literal("Current Temp: " + getHeatContainer().getCurrentTemperature()));
+        return List.of(Component.literal("Current Temp: " + FormattingUtil.formatNumber2Places(getHeatContainer().getCurrentTemperature())));
     }
 }
