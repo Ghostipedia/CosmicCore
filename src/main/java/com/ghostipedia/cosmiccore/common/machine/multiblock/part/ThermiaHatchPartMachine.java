@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHeatContainer {
@@ -72,6 +73,18 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     }
 
     @Override
+    public void saveCustomPersistedData(CompoundTag tag, boolean forDrop) {
+        tag.putDouble("Thermal", thermiaContainer.getCurrentEnergy());
+        super.saveCustomPersistedData(tag, forDrop);
+    }
+
+    @Override
+    public void loadCustomPersistedData(CompoundTag tag) {
+        thermiaContainer.setCurrentEnergy(tag.getDouble("Thermal"));
+        super.loadCustomPersistedData(tag);
+    }
+
+    @Override
     public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
         return thermiaContainer.acceptHeatFromNetwork(side, thermalEnergy);
     }
@@ -99,6 +112,11 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     @Override
     public double getCurrentEnergy() {
         return thermiaContainer.getCurrentEnergy();
+    }
+
+    @Override
+    public void setCurrentEnergy(double energy) {
+        thermiaContainer.setCurrentEnergy(energy);
     }
 
     @Override

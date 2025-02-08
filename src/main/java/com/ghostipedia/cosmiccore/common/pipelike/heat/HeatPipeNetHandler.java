@@ -11,7 +11,7 @@ public class HeatPipeNetHandler implements IHeatContainer {
 
     private final HeatPipeBlockEntity pipe;
     private final HeatPipeProperties properties;
-    private double energy;
+    public double energy;
     private double lastEnergy;
     private int lastUpdateTick = -1;
 
@@ -62,6 +62,11 @@ public class HeatPipeNetHandler implements IHeatContainer {
     public double getCurrentEnergy() {
         update();
         return lastEnergy;
+    }
+
+    @Override
+    public void setCurrentEnergy(double energy) {
+        this.energy = energy;
     }
 
     @Override

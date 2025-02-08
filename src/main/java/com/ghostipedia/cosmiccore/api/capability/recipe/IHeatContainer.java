@@ -45,6 +45,8 @@ public interface IHeatContainer {
 
     double getCurrentEnergy();
 
+    void setCurrentEnergy(double energy);
+
     float getHeatCapacity();
 
     //Reports the Current Temperature.
@@ -98,6 +100,9 @@ public interface IHeatContainer {
         public double getCurrentEnergy() {
             return 0;
         }
+
+        @Override
+        public void setCurrentEnergy(double energy) {}
 
         @Override
         public float getHeatCapacity() {

@@ -70,6 +70,11 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     }
 
     @Override
+    public void setCurrentEnergy(double energy) {
+        this.energy = energy;
+    }
+
+    @Override
     public float getHeatCapacity() {
         return 500f;
     }

@@ -110,7 +110,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
     }
 
     @NotNull
-    public IHeatContainer getHeatContainer() {
+    public HeatPipeNetHandler getHeatContainer() {
         if (heatContainer == null) {
             heatContainer = new HeatPipeNetHandler(this, this.getNodeData());
         }
@@ -182,11 +182,13 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
     @Override
     public void saveCustomPersistedData(CompoundTag tag, boolean forDrop) {
+        tag.putDouble("Thermal", getHeatContainer().getCurrentEnergy());
         super.saveCustomPersistedData(tag, forDrop);
     }
 
     @Override
     public void loadCustomPersistedData(CompoundTag tag) {
+        getHeatContainer().setCurrentEnergy(tag.getDouble("Thermal"));
         super.loadCustomPersistedData(tag);
     }
 

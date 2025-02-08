@@ -116,6 +116,9 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
+    public void setCurrentEnergy(double energy) {}
+
+    @Override
     public float getHeatCapacity() {
         return 1;
     }

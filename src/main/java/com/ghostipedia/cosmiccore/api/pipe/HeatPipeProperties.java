@@ -23,7 +23,7 @@ public class HeatPipeProperties implements IMaterialProperty {
         assert rate > 0;
         this.maxTemp = temp;
         this.conductance = rate;
-        this.conductanceEnvironment = rate * 0.1f;
+        this.conductanceEnvironment = rate * 0.01f;
         hash = Objects.hash(maxTemp, conductance, conductanceEnvironment, thermalCapacity);
     }
 
