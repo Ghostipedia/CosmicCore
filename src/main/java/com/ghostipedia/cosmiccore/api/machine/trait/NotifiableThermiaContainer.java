@@ -20,46 +20,63 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     @Getter
     private final IO handlerIO;
     @Getter
-    private final long overloadLimit;
+    private final float overloadLimit;
     @Persisted
     @DescSynced
     @Getter
-    private final long currentTemp;
+    private double energy;
     @Setter
     private Predicate<Direction> sideInputCondition;
     @Setter
     private Predicate<Direction> sideOutputCondition;
-    public NotifiableThermiaContainer(MetaMachine machine, IO io, long overloadLimit, long currentTemp) {
+    public NotifiableThermiaContainer(MetaMachine machine, IO io, float overloadLimit, double thermalEnergy) {
         super(machine);
         this.handlerIO = io;
         this.overloadLimit = overloadLimit;
-        this.currentTemp = currentTemp;
+        this.energy = thermalEnergy;
     }
-
-    public void serverTick() {
-        if (getMachine().getLevel().isClientSide) return;
-    }
-
-
 
     @Override
-    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
-        return 0;
+    public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
+        this.energy += thermalEnergy;
+        double fit = getHeatChangeToFitWithinTempLimits();
+        this.energy += fit;
+        thermalEnergy -= fit;
+        return thermalEnergy;
     }
 
     @Override
     public boolean inputsHeat(Direction side) {
-        return false;
+        return handlerIO.support(IO.IN) && (sideInputCondition == null || sideInputCondition.test(side));
     }
 
     @Override
-    public long changeHeat(long heatDifference) {
-        return 0;
+    public boolean outputsHeat(Direction side) {
+        return handlerIO.support(IO.OUT) && (sideOutputCondition == null || sideOutputCondition.test(side));
     }
 
     @Override
-    public long getCurrentTemperature() {
-        return this.getHeatInfo().currentTemp();
+    public double changeHeat(double thermalEnergy) {
+        this.energy += thermalEnergy;
+        double fit = getHeatChangeToFitWithinTempLimits();
+        this.energy += fit;
+        thermalEnergy -= fit;
+        return thermalEnergy;
+    }
+
+    @Override
+    public double getCurrentEnergy() {
+        return energy;
+    }
+
+    @Override
+    public float getHeatCapacity() {
+        return 500f;
+    }
+
+    @Override
+    public float getConductance() {
+        return 1f;
     }
 
     @Override
@@ -80,10 +97,5 @@ public class NotifiableThermiaContainer extends NotifiableRecipeHandlerTrait<Int
     @Override
     public RecipeCapability<Integer> getCapability() {
         return null;
-    }
-
-    @Override
-    public float getThermalConductance() {
-        return 0;
     }
 }

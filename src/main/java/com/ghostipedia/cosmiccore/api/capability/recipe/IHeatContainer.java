@@ -1,17 +1,16 @@
 package com.ghostipedia.cosmiccore.api.capability.recipe;
 
-import com.ghostipedia.cosmiccore.api.capability.IHeatInfoProvider;
 import net.minecraft.core.Direction;
 
-public interface IHeatContainer extends IHeatInfoProvider {
-    /** This method is similar to {@link #changeHeat(long heatDifference)}
+public interface IHeatContainer {
+    /** This method is similar to {@link #changeHeat(double)}
      * <br>
      *
      *
      * This method is the logic for when this container RECIEVES heat from the specified direction,
      * used when heat goes between 2 blocks
     */
-    long acceptHeatFromNetwork(Direction side, long heatDifference);
+    double acceptHeatFromNetwork(Direction side, double thermalEnergy);
 
     //Returns: if this container can accept heat from this side.
     boolean inputsHeat(Direction side);
@@ -23,13 +22,13 @@ public interface IHeatContainer extends IHeatInfoProvider {
 
     /*  used for changing heat value internally in the block
      */
-    long changeHeat(long heatDifference);
+    double changeHeat(double thermalEnergy);
 
     /* Adds a set amount of heat to this heat container
      * Params : heatToAdd - amount of heat to add.
      * Returns : amount of heat added.
      * */
-    default long addHeat(long heatToAdd) {
+    default double addHeat(double heatToAdd) {
         return changeHeat(heatToAdd);
     }
 
@@ -37,54 +36,46 @@ public interface IHeatContainer extends IHeatInfoProvider {
      * Params : heatToRemove - amount of heat to remove.
      * Returns : amount of heat removed.
      * */
-    default long removeHeat(long heatToRemove) {
+    default double removeHeat(double heatToRemove) {
         return -changeHeat(-heatToRemove);
     }
 
-
-    //Heat Containers Do not have an insertion limit. Thus we melt the block if they overload.
-    //TODO : The Math that actually makes this behave less psychotic. And actually function.
-    default boolean getHeatCanBeOverloaded() { return false; }
-
     //Reports the Current Thermal Maximum a container can withstand
-    long getOverloadLimit();
+    float getOverloadLimit();
 
+    double getCurrentEnergy();
+
+    float getHeatCapacity();
 
     //Reports the Current Temperature.
-    long getCurrentTemperature();
+    default double getCurrentTemperature() {
+        return getCurrentEnergy() / getHeatCapacity() + getBaseTemperature();
+    }
 
-    @Override
-    default HeatInfo getHeatInfo(){
-        return new HeatInfo(getOverloadLimit(), getCurrentTemperature(), getHeatCanBeOverloaded());
-    };
+    default double getBaseTemperature() {
+        return 300;
+    }
+
+    float getConductance();
 
     // Params needs to build the container.
     //This Abomination - Allows Going below Absolute Zero
-    @Override
-    default boolean supportsImpossibleHeatValues(){
+    default boolean supportsImpossibleHeatValues() {
         return false;
-    };
+    }
 
-    //Max amount of heat that can be output per tick
-    default long getEjectLimit(){
-        return 0L;
-    };
-    //Max amount of heat that can be accepted per tick
-    default long getAcceptLimit(){
-        return 0L;
-    }
-    //Input per second
-    default long getHeatInputPerSec(){
-        return 0L;
-    }
-    //Output per second
-    default long getHeatOutputPerSec(){
-        return 0L;
+    default double getHeatChangeToFitWithinTempLimits() {
+        double temp = getCurrentTemperature();
+        if (temp > getOverloadLimit()) {
+            return (getOverloadLimit() - getBaseTemperature()) * getHeatCapacity() - getCurrentEnergy();
+        } else if (!supportsImpossibleHeatValues() && temp < 0) {
+            return -getBaseTemperature() * getHeatCapacity() - getCurrentEnergy();
+        } else return 0;
     }
 
     IHeatContainer DEFAULT = new IHeatContainer() {
         @Override
-        public long acceptHeatFromNetwork(Direction side, long heatDiff) {
+        public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
             return 0;
         }
 
@@ -94,22 +85,27 @@ public interface IHeatContainer extends IHeatInfoProvider {
         }
 
         @Override
-        public long changeHeat(long heatDifference) {
+        public double changeHeat(double thermalEnergy) {
             return 0;
         }
 
         @Override
-        public long getOverloadLimit() {
+        public float getOverloadLimit() {
             return 0;
         }
 
         @Override
-        public long getCurrentTemperature() {
+        public double getCurrentEnergy() {
             return 0;
         }
 
         @Override
-        public float getThermalConductance() {
+        public float getHeatCapacity() {
+            return 1;
+        }
+
+        @Override
+        public float getConductance() {
             return 0;
         }
     };

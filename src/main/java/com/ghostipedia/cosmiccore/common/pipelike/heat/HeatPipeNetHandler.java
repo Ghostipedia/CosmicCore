@@ -1,6 +1,7 @@
 package com.ghostipedia.cosmiccore.common.pipelike.heat;
 
 import com.ghostipedia.cosmiccore.api.capability.recipe.IHeatContainer;
+import com.ghostipedia.cosmiccore.api.pipe.HeatPipeProperties;
 import com.ghostipedia.cosmiccore.common.blockentity.pipelike.HeatPipeBlockEntity;
 import lombok.Getter;
 import net.minecraft.core.Direction;
@@ -8,52 +9,80 @@ import org.jetbrains.annotations.NotNull;
 
 public class HeatPipeNetHandler implements IHeatContainer {
 
-    @Getter
-    private HeatPipeNet net;
-    private boolean transfer;
     private final HeatPipeBlockEntity pipe;
-    private final Direction facing;
+    private final HeatPipeProperties properties;
+    private double energy;
+    private double lastEnergy;
+    private int lastUpdateTick = -1;
 
-    public HeatPipeNetHandler(@NotNull HeatPipeNet net, @NotNull HeatPipeBlockEntity pipe, Direction facing) {
-        this.net = net;
+    public HeatPipeNetHandler(@NotNull HeatPipeBlockEntity pipe, HeatPipeProperties properties) {
         this.pipe = pipe;
-        this.facing  = facing;
-    }
-
-    public void updateNet(HeatPipeNet net) {
-        this.net = net;
+        this.properties = properties;
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
-        return 0;
+    public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
+        update();
+        energy += thermalEnergy;
+        return thermalEnergy;
+    }
+
+    @Override
+    public double getBaseTemperature() {
+        return pipe.getEnvironmentalTemperature();
     }
 
     @Override
     public boolean inputsHeat(Direction side) {
-        return false;
+        return pipe.isConnected(side);
     }
 
     @Override
-    public long changeHeat(long heatDifference) {
-        return 0;
+    public boolean outputsHeat(Direction side) {
+        return pipe.isConnected(side);
     }
 
     @Override
-    public long getOverloadLimit() {
-        return 0;
+    public double changeHeat(double thermalEnergy) {
+        update();
+        energy += thermalEnergy;
+        if (energy < 0) {
+            thermalEnergy += energy;
+            energy = 0;
+        }
+        return thermalEnergy;
     }
 
     @Override
-    public long getCurrentTemperature() {
-        var container = pipe.getHeatContainer(null);
-        if(container != null)
-            return (long)pipe.getCurrentTemp();
-        return HeatPipeBlockEntity.AMBIENT_TEMP.getCurrentTemperature();
+    public float getOverloadLimit() {
+        return properties.getMaxTemp();
     }
 
     @Override
-    public float getThermalConductance() {
-        return pipe.getNodeData().getMaxTransferRate();
+    public double getCurrentEnergy() {
+        update();
+        return lastEnergy;
+    }
+
+    @Override
+    public float getHeatCapacity() {
+        return properties.getThermalCapacity();
+    }
+
+    @Override
+    public float getConductance() {
+        return properties.getConductance();
+    }
+
+    private void update() {
+        int tick = pipe.getLevel().getServer().getTickCount();
+        int update = tick - lastUpdateTick;
+        if (update == 0 || update < 0) {
+            lastUpdateTick = tick;
+            return;
+        }
+        lastUpdateTick = tick;
+        lastEnergy = pipe.loseEnergy(energy, pipe.getEnvironmentalConductivity() * properties.getConductanceEnvironment(), update);
+        energy = lastEnergy;
     }
 }

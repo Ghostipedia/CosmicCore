@@ -247,7 +247,7 @@ public class CosmicMaterials {
     }
 
     public static void modifyMaterials() {
-        HastelloyC276.setProperty(CosmicPropertyKeys.HEAT, new HeatPipeProperties(1500.f, .0023f));
+        HastelloyC276.setProperty(CosmicPropertyKeys.HEAT, new HeatPipeProperties(1500.f, .23f));
 
     }
 }

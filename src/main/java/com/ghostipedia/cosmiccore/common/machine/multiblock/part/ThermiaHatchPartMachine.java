@@ -27,7 +27,6 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     private final NotifiableThermiaContainer thermiaContainer;
     public ThermiaHatchPartMachine(IMachineBlockEntity holder, int tier, IO io) {
         super(holder, tier, io);
-        long currentTemp = 0;
         this.thermiaContainer = createThermiaContainer();
     }
     protected NotifiableThermiaContainer createThermiaContainer(){
@@ -54,7 +53,7 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
         group.addWidget(new LabelWidget(8, 18, () -> I18n.get("gui.cosmiccore.thermia_hatch.hatch_limit")));
         group.addWidget(new LabelWidget(8, 28, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getOverloadLimit()), "K")).setClientSideWidget());
         group.addWidget(new LabelWidget(8, 38, () -> I18n.get("gui.cosmiccore.thermia_hatch.stored_temp")).setClientSideWidget());
-        group.addWidget(new LabelWidget(8, 48, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getCurrentTemp()), "K")).setClientSideWidget());
+        group.addWidget(new LabelWidget(8, 48, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getEnergy()), "K")).setClientSideWidget());
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
     }
@@ -73,37 +72,57 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
-        return 0;
+    public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
+        return thermiaContainer.acceptHeatFromNetwork(side, thermalEnergy);
     }
 
     @Override
     public boolean inputsHeat(Direction side) {
-        return false;
+        return thermiaContainer.inputsHeat(side);
     }
 
     @Override
     public boolean outputsHeat(Direction side) {
-        return IHeatContainer.super.outputsHeat(side);
+        return thermiaContainer.outputsHeat(side);
     }
 
     @Override
-    public long changeHeat(long heatDifference) {
-        return 0;
+    public double changeHeat(double thermalEnergy) {
+        return thermiaContainer.changeHeat(thermalEnergy);
     }
 
     @Override
-    public long getOverloadLimit() {
-        return 0;
+    public float getOverloadLimit() {
+        return thermiaContainer.getOverloadLimit();
     }
 
     @Override
-    public long getCurrentTemperature() {
-        return 0;
+    public double getCurrentEnergy() {
+        return thermiaContainer.getCurrentEnergy();
     }
 
     @Override
-    public float getThermalConductance() {
-        return 0;
+    public float getHeatCapacity() {
+        return thermiaContainer.getHeatCapacity();
+    }
+
+    @Override
+    public double getCurrentTemperature() {
+        return thermiaContainer.getCurrentTemperature();
+    }
+
+    @Override
+    public double getBaseTemperature() {
+        return thermiaContainer.getBaseTemperature();
+    }
+
+    @Override
+    public float getConductance() {
+        return thermiaContainer.getConductance();
+    }
+
+    @Override
+    public boolean supportsImpossibleHeatValues() {
+        return thermiaContainer.supportsImpossibleHeatValues();
     }
 }

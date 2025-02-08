@@ -10,13 +10,21 @@ public class HeatPipeProperties implements IMaterialProperty {
 
     @Getter
     private final float maxTemp;
-    // do not go above 1 or death occurs
     @Getter
-    private final float maxTransferRate;
+    private final float conductance;
+    @Getter
+    private final float conductanceEnvironment;
+    @Getter
+    private final float thermalCapacity = 100f;
+
+    private final int hash;
 
     public HeatPipeProperties(float temp, float rate) {
+        assert rate > 0;
         this.maxTemp = temp;
-        this.maxTransferRate = rate;
+        this.conductance = rate;
+        this.conductanceEnvironment = rate * 0.1f;
+        hash = Objects.hash(maxTemp, conductance, thermalCapacity);
     }
 
     @Override
@@ -26,6 +34,6 @@ public class HeatPipeProperties implements IMaterialProperty {
 
     @Override
     public int hashCode() {
-        return Objects.hash(maxTemp, maxTransferRate);
+        return hash;
     }
 }

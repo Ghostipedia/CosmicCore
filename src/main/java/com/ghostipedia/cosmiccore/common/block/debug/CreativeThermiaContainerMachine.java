@@ -83,7 +83,7 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public long acceptHeatFromNetwork(Direction side, long heatDiff) {
+    public double acceptHeatFromNetwork(Direction side, double thermalEnergy) {
         return 0;
     }
 
@@ -98,7 +98,7 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public long changeHeat(long heatDifference) {
+    public double changeHeat(double thermalEnergy) {
         if(source || !active) {
             return 0;
         }
@@ -106,13 +106,18 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public long getOverloadLimit() {
+    public float getOverloadLimit() {
+        return Float.MAX_VALUE;
+    }
+
+    @Override
+    public double getCurrentEnergy() {
         return 0;
     }
 
     @Override
-    public long getCurrentTemperature() {
-        return heat;
+    public float getHeatCapacity() {
+        return 1;
     }
 
     @Override
@@ -149,8 +154,8 @@ public class CreativeThermiaContainerMachine extends MetaMachine implements IHea
     }
 
     @Override
-    public float getThermalConductance() {
-        return 0.9f;
+    public float getConductance() {
+        return 1f;
     }
 }
 
