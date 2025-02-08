@@ -28,6 +28,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -109,10 +110,10 @@ public class HeatPipeBlock extends MaterialPipeBlock<HeatPipeType, HeatPipePrope
     }
 
     @Override
-    public void onNeighborChange(BlockState state, LevelReader level, BlockPos pos, BlockPos neighbor) {
-        super.onNeighborChange(state, level, pos, neighbor);
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         BlockEntity tile = level.getBlockEntity(pos);
         if (!(tile instanceof HeatPipeBlockEntity h)) return;
-        h.removeNeighborCache(GTUtil.getFacingToNeighbor(pos, neighbor));
+        h.removeNeighborCache(GTUtil.getFacingToNeighbor(pos, fromPos));
     }
 }
