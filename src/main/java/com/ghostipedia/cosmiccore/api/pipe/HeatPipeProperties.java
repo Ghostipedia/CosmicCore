@@ -24,7 +24,7 @@ public class HeatPipeProperties implements IMaterialProperty {
         this.maxTemp = temp;
         this.conductance = rate;
         this.conductanceEnvironment = rate * 0.1f;
-        hash = Objects.hash(maxTemp, conductance, thermalCapacity);
+        hash = Objects.hash(maxTemp, conductance, conductanceEnvironment, thermalCapacity);
     }
 
     @Override

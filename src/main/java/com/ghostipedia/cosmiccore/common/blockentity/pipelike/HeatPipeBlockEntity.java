@@ -127,7 +127,7 @@ public class HeatPipeBlockEntity extends PipeBlockEntity<HeatPipeType, HeatPipeP
 
     public double loseEnergy(double thermalEnergy, double environmentalFactor, int ticksPassed) {
         for (int i = 0; i < ticksPassed; i++) {
-            thermalEnergy -= Math.pow(thermalEnergy, 0.3) * environmentalFactor;
+            thermalEnergy -= Math.pow(Math.abs(thermalEnergy), 0.3) * environmentalFactor * Math.signum(thermalEnergy);
         }
         return thermalEnergy;
     }

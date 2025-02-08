@@ -53,7 +53,7 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
         group.addWidget(new LabelWidget(8, 18, () -> I18n.get("gui.cosmiccore.thermia_hatch.hatch_limit")));
         group.addWidget(new LabelWidget(8, 28, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getOverloadLimit()), "K")).setClientSideWidget());
         group.addWidget(new LabelWidget(8, 38, () -> I18n.get("gui.cosmiccore.thermia_hatch.stored_temp")).setClientSideWidget());
-        group.addWidget(new LabelWidget(8, 48, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getEnergy()), "K")).setClientSideWidget());
+        group.addWidget(new LabelWidget(8, 48, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getCurrentTemperature()), "K")).setClientSideWidget());
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
     }
