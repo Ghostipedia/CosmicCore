@@ -19,10 +19,16 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHeatContainer {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(ThermiaHatchPartMachine.class, TieredIOPartMachine.MANAGED_FIELD_HOLDER);
+
+    @Override
+    public @NotNull ManagedFieldHolder getFieldHolder() {
+        return MANAGED_FIELD_HOLDER;
+    }
 
     @Persisted @DescSynced
     private final NotifiableThermiaContainer thermiaContainer;
@@ -50,11 +56,11 @@ public class ThermiaHatchPartMachine extends TieredIOPartMachine implements IHea
         var group = new WidgetGroup(0,0,128,63);
 
         group.addWidget(new ImageWidget(4, 4, 120, 55, GuiTextures.DISPLAY));
-        group.addWidget(new LabelWidget(8, 8, Component.translatable("gui.cosmiccore.thermia_hatch.label." + (this.io == IO.IN ? "import" : "export"))));
+        group.addWidget(new LabelWidget(8, 8, () -> Component.translatable("gui.cosmiccore.thermia_hatch.label." + (this.io == IO.IN ? "import" : "export")).getString()));
         group.addWidget(new LabelWidget(8, 18, () -> I18n.get("gui.cosmiccore.thermia_hatch.hatch_limit")));
-        group.addWidget(new LabelWidget(8, 28, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getOverloadLimit()), "K")).setClientSideWidget());
-        group.addWidget(new LabelWidget(8, 38, () -> I18n.get("gui.cosmiccore.thermia_hatch.stored_temp")).setClientSideWidget());
-        group.addWidget(new LabelWidget(8, 48, () -> I18n.get(FormattingUtil.formatNumbers(thermiaContainer.getCurrentTemperature()), "K")).setClientSideWidget());
+        group.addWidget(new LabelWidget(8, 28, () -> FormattingUtil.formatNumbers(thermiaContainer.getOverloadLimit()) + "K"));
+        group.addWidget(new LabelWidget(8, 38, () -> I18n.get("gui.cosmiccore.thermia_hatch.stored_temp")));
+        group.addWidget(new LabelWidget(8, 48, () -> FormattingUtil.formatNumbers(thermiaContainer.getCurrentTemperature()) + "K"));
         group.setBackground(GuiTextures.BACKGROUND_INVERSE);
         return group;
     }
