@@ -63,6 +63,7 @@ public class CosmicMaterialBlocks {
                 .addLayer(()-> RenderType::cutoutMipped)
                 .color(() -> MaterialPipeBlock::tintedColor)
                 .item(MaterialPipeBlockItem::new)
+                .color(() -> MaterialPipeBlockItem::tintColor)
                 .model(NonNullBiConsumer.noop())
                 .build()
                 .register();
