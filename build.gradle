@@ -48,7 +48,7 @@ loom {
 
     runConfigs.named("data").configure {
         programArg("--existing=" + file("src/main/resources").absolutePath)
-        programArg("--existing-mod gtceu")
+        programArg("--existing-mod=gtceu")
         programArgs("--client", "--server")
     }
 }
@@ -198,9 +198,13 @@ dependencies {
     implementation(include("io.github.llamalad7:mixinextras-forge:${project.mixinextras_version}"))
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+    // FTB
+    modImplementation("curse.maven:ftb-teams-forge-404468:${project.ftb_team}")
+    modImplementation("curse.maven:ftb-teams-forge-404465:${project.ftb_lib}")
+
     // lombok
-    compileOnly 'org.projectlombok:lombok:1.18.32'
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 }
 
 processResources {

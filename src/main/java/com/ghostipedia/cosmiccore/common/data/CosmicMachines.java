@@ -11,17 +11,17 @@ import com.ghostipedia.cosmiccore.common.block.debug.CreativeThermiaContainerMac
 import com.ghostipedia.cosmiccore.common.data.materials.CosmicMaterials;
 import com.ghostipedia.cosmiccore.common.data.recipe.CosmicRecipeModifiers;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.electric.MagneticFieldMachine;
+import com.ghostipedia.cosmiccore.common.machine.multiblock.multi.WirelessDataBankMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.CosmicParallelHatchPartMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.SoulHatchPartMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.ThermiaHatchPartMachine;
+import com.ghostipedia.cosmiccore.common.machine.multiblock.part.WirelessDataHatchPartMachine;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.steam.WeakSteamParallelMultiBlockMachine;
 import com.ghostipedia.cosmiccore.gtbridge.CosmicRecipeTypes;
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.capability.recipe.IRecipeCapabilityHolder;
-import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
@@ -35,9 +35,7 @@ import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMa
 import com.gregtechceu.gtceu.api.machine.steam.SimpleSteamMachine;
 import com.gregtechceu.gtceu.api.pattern.FactoryBlockPattern;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
-import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
-import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.registry.registrate.MachineBuilder;
 import com.gregtechceu.gtceu.client.renderer.machine.LargeBoilerRenderer;
 import com.gregtechceu.gtceu.client.renderer.machine.WorkableSteamMachineRenderer;
@@ -48,19 +46,11 @@ import com.gregtechceu.gtceu.common.machine.storage.CreativeEnergyContainerMachi
 import com.gregtechceu.gtceu.common.registry.GTRegistration;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.network.chat.Component;
-import com.gregtechceu.gtceu.utils.GTHashMaps;
-import com.gregtechceu.gtceu.utils.ItemStackHashStrategy;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import static com.ghostipedia.cosmiccore.api.pattern.CosmicPredicates.magnetCoils;
 import static com.ghostipedia.cosmiccore.api.registries.CosmicRegistration.REGISTRATE;
@@ -71,7 +61,6 @@ import static com.gregtechceu.gtceu.api.pattern.Predicates.*;
 import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
 import static com.gregtechceu.gtceu.common.data.GCYMBlocks.*;
 import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
-import static com.gregtechceu.gtceu.common.data.GTMachines.*;
 import static com.gregtechceu.gtceu.common.data.machines.GTMachineUtils.*;
 import static com.gregtechceu.gtceu.common.data.machines.GTMultiMachines.FUSION_REACTOR;
 
@@ -149,6 +138,7 @@ public class CosmicMachines {
 //                    .build())
 //            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_inert_ptfe"), GTCEu.id("block/multiblock/coke_oven"))
 //            .register();
+
 public static final MultiblockMachineDefinition STEAM_CASTER = GTRegistration.REGISTRATE
         .multiblock("steam_caster", WeakSteamParallelMultiBlockMachine::new)
         .rotationState(RotationState.ALL)
@@ -594,8 +584,9 @@ public static final MultiblockMachineDefinition STEAM_MIXER = GTRegistration.REG
                     .where("P",  controller(blocks(definition.getBlock())))
                     .build())
             .workableCasingRenderer(CosmicCore.id("block/casings/solid/vomahine_certified_chemically_resistant_casing"), CosmicCore.id("block/multiblock/vomahine_chemplant"))
-
             .register();
+
+
     private static MachineDefinition[] registerSoulTieredHatch(String name, String displayName, String model, IO io, int[] tiers, PartAbility... abilities) {
         return registerTieredMachines(name,
                 (holder, tier) -> new SoulHatchPartMachine(holder, tier, io),
@@ -654,6 +645,35 @@ public static final MultiblockMachineDefinition STEAM_MIXER = GTRegistration.REG
             .overlaySteamHullRenderer("fluid_hatch.export")
             .langValue("Fluid Output Hatch (Steam)")
             .register();
+
+    public static final MultiblockMachineDefinition WIRELESS_DATA_TRANSMITTER = REGISTRATE
+            .multiblock("wireless_data_transmitter", WirelessDataBankMachine::new)
+            .langValue("Wireless Data Transmitter")
+            .rotationState(RotationState.NON_Y_AXIS)
+            .appearanceBlock(HIGH_POWER_CASING)
+            .recipeType(GTRecipeTypes.DUMMY_RECIPES)
+            .pattern(definition -> FactoryBlockPattern.start()
+                    .aisle("M", "A", "A")
+                    .aisle("S", "C", "I")
+                    .where("C", controller(blocks(definition.getBlock())))
+                    .where("S", abilities(PartAbility.OPTICAL_DATA_RECEPTION))
+                    .where("I", abilities(PartAbility.INPUT_ENERGY))
+                    .where("M", abilities(PartAbility.MAINTENANCE))
+                    .where("A", blocks(HIGH_POWER_CASING.get()))
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/hpca/high_power_casing"), CosmicCore.id("block/multiblock/wireless_data_transmitter"))
+            .register();
+
+    public static final MachineDefinition WIRELESS_DATA_HATCH = REGISTRATE
+            .machine("wireless_data_hatch", WirelessDataHatchPartMachine::new)
+            .langValue("Wireless Data Hatch")
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.DATA_ACCESS)
+            .tier(UEV)
+            .overlayTieredHullRenderer("wireless_data_hatch")
+            .register();
+
+
     public static void init() {
         for (MultiblockMachineDefinition definition : FUSION_REACTOR) {
             if (definition == null) continue;
