@@ -3100,7 +3100,7 @@ public class CosmicMachines {
             .langValue("Wireless Data Hatch")
             .rotationState(RotationState.ALL)
             .abilities(PartAbility.DATA_ACCESS)
-            .tier(UEV)
+            .tier(UHV)
             .overlayTieredHullRenderer("wireless_data_hatch")
             .register();
 
