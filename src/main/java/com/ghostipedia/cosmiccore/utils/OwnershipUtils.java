@@ -34,7 +34,8 @@ public class OwnershipUtils {
             textList.add(Component.translatable("behavior.wireless_data.owner.player", name));
         } else if (owner instanceof FTBOwner ftOwner) {
             var team = ftOwner.getTeam().getName();
-            textList.add(Component.translatable("behavior.wireless_data.owner.team").append(team));
+            textList.add(Component.translatable("behavior.wireless_data.owner.team"));
+            textList.add(Component.translatable(team.getString()));
         }
     }
 }
