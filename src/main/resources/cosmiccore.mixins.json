@@ -6,6 +6,7 @@
   "mixins": [
     "AdAstraOverlayScreenMixin",
     "AdAstraSpaceSuitItemMixin",
+    "BlockModifierMixin",
     "DivingHelmetItemMixin",
     "GTValuesMixin",
     "MAE2GTIntegrationMixin",
