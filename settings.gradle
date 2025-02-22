@@ -8,16 +8,3 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
-    versionCatalogs {
-        def spotlessVersion = "6.25.0"
-        libs {
-            def spotless = version("spotless", spotlessVersion)
-            plugin("spotless", "com.diffplug.spotless").versionRef(spotless)
-        }
-    }
-}
