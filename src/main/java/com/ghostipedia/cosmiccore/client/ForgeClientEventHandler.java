@@ -3,13 +3,15 @@ package com.ghostipedia.cosmiccore.client;
 import com.ghostipedia.cosmiccore.CosmicCore;
 import com.ghostipedia.cosmiccore.CosmicUtils;
 import com.ghostipedia.cosmiccore.client.renderer.StructureBoundingBox;
-import com.mojang.blaze3d.shaders.FogShape;
+
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import com.mojang.blaze3d.shaders.FogShape;
 
 @SuppressWarnings("unused")
 @Mod.EventBusSubscriber(modid = CosmicCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)

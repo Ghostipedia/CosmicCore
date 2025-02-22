@@ -7,5 +7,4 @@ public interface IWirelessStore<T> {
     void uploadData(T data);
 
     T downloadData();
-
 }

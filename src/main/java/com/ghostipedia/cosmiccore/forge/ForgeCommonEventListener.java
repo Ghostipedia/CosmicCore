@@ -6,7 +6,9 @@ import com.ghostipedia.cosmiccore.common.data.CosmicItems;
 import com.ghostipedia.cosmiccore.common.item.behavior.EffectApplicationBehavior;
 import com.ghostipedia.cosmiccore.common.machine.multiblock.part.SoulHatchPartMachine;
 import com.ghostipedia.cosmiccore.mixin.accessor.LivingEntityAccessor;
+
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
+
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
@@ -35,7 +37,7 @@ public class ForgeCommonEventListener {
 
         if (CosmicUtils.hasRing(event.player)) {
             // forcefully get the ring's effects.
-            var effects = ((EffectApplicationBehavior)CosmicItems.THE_ONE_RING.get().getComponents().get(0))
+            var effects = ((EffectApplicationBehavior) CosmicItems.THE_ONE_RING.get().getComponents().get(0))
                     .getEffects();
             for (var effect : effects) {
                 if (event.player.getRandom().nextFloat() < effect.getSecond()) {

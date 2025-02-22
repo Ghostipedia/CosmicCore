@@ -1,9 +1,8 @@
 package com.ghostipedia.cosmiccore.common.wireless;
 
-import com.ghostipedia.cosmiccore.api.wireless.IWirelessStore;
 import com.gregtechceu.gtceu.api.capability.IDataAccessHatch;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
-import net.minecraft.world.item.ItemStack;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

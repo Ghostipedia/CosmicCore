@@ -3,6 +3,7 @@ package com.ghostipedia.cosmiccore.common.wireless;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+
 import org.jetbrains.annotations.NotNull;
 
 public class GlobalWirelessSavedData extends SavedData {
