@@ -15,25 +15,10 @@ import java.util.UUID;
 
 public class OwnershipUtils {
 
-    public static UUID getOwnerUUID(IMachineOwner owner) {
-        if (owner instanceof PlayerOwner playerOwner) {
-            return playerOwner.getPlayerUUID();
-        } else if (owner instanceof FTBOwner ftOwner) {
-            return ftOwner.getTeam().getId();
-        } else return null;
-    }
-
-    public static String getName(IMachineOwner owner) {
-        if (owner instanceof PlayerOwner playerOwner) {
-            return UsernameCache.getLastKnownUsername(playerOwner.getPlayerUUID());
-        } else if (owner instanceof FTBOwner ftOwner) {
-            return ftOwner.getTeam().getName().getString();
-        } else return "NaN";
-    }
 
     public static void addOwnerLine(List<Component> textList, IMachineOwner owner) {
         if (owner instanceof PlayerOwner playerOwner) {
-            var name = UsernameCache.getLastKnownUsername(playerOwner.getPlayerUUID());
+            var name = UsernameCache.getLastKnownUsername(playerOwner.getUUID());
             textList.add(Component.translatable("behavior.wireless_data.owner.player", name));
         } else if (owner instanceof FTBOwner ftOwner) {
             var team = ftOwner.getTeam().getName();

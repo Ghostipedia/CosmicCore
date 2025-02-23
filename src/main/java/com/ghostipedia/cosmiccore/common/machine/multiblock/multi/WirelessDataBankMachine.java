@@ -1,49 +1,28 @@
 package com.ghostipedia.cosmiccore.common.machine.multiblock.multi;
 
-import com.ghostipedia.cosmiccore.CosmicCore;
 import com.ghostipedia.cosmiccore.common.wireless.WirelessDataStore;
 import com.ghostipedia.cosmiccore.utils.OwnershipUtils;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.blockentity.ITickSubscription;
 import com.gregtechceu.gtceu.api.capability.IControllable;
 import com.gregtechceu.gtceu.api.capability.IDataAccessHatch;
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.machine.ConditionalSubscriptionHandler;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
-import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMaintenanceMachine;
-import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.MultiblockDisplayText;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.misc.EnergyContainerList;
-import com.gregtechceu.gtceu.common.machine.multiblock.electric.research.DataBankMachine;
-import com.gregtechceu.gtceu.common.machine.multiblock.part.MaintenanceHatchPartMachine;
-import com.gregtechceu.gtceu.common.machine.owner.ArgonautsOwner;
-import com.gregtechceu.gtceu.common.machine.owner.FTBOwner;
-import com.gregtechceu.gtceu.common.machine.owner.IMachineOwner;
-import com.gregtechceu.gtceu.common.machine.owner.PlayerOwner;
 import com.gregtechceu.gtceu.config.ConfigHolder;
-import earth.terrarium.botarium.common.energy.base.EnergyContainer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
-import lombok.Getter;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.TickTask;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.BlockHitResult;
-import org.jetbrains.annotations.Nullable;
-import wayoftime.bloodmagic.core.util.PlayerUtil;
-import wayoftime.bloodmagic.util.helper.PlayerHelper;
 
 import java.util.*;
 
@@ -162,15 +141,13 @@ public class WirelessDataBankMachine extends WorkableElectricMultiblockMachine
 
 
     private void addHatchesToWirelessNetwork() {
-        var owner = getHolder().getOwner();
-        var uuid = OwnershipUtils.getOwnerUUID(owner);
+        var uuid = getHolder().getOwner().getUUID();
         var hatches = getOpticalHatches();
         WirelessDataStore.addHatches(uuid, hatches);
     }
 
     private void removeHatchesFromWirelessNetwork() {
-        var owner = getHolder().getOwner();
-        var uuid = OwnershipUtils.getOwnerUUID(owner);
+        var uuid = getHolder().getOwner().getUUID();
         var hatches = getOpticalHatches();
         WirelessDataStore.removeHatches(uuid, hatches);
     }
